@@ -248,7 +248,7 @@ public class PlanInversionPanel extends JPanel {
             model.addRow(new Object[]{
                 p.getIdPlan(),
                 p.getIdCliente(),
-                "Producto " + p.getIdProducto(),
+                p.getIdProducto() + " - CDT",
                 String.format("S/. %.2f", p.getMontoInvertido()),
                 p.getTasaPactada() + "%",
                 p.getPlazoMeses() + " meses",
