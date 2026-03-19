@@ -58,6 +58,7 @@ public class MainFrame extends JFrame {
         tabs.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         tabs.addTab("Clientes", crearPanelClientes());
         tabs.addTab("Cuentas de ahorro", crearPanelCuentas());
+        tabs.addTab("Planes de inversion", new PlanInversionPanel());
         tabs.addTab("Transacciones recientes", crearPanelTransacciones());
 
         add(panelTop, BorderLayout.NORTH);
