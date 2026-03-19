@@ -1,8 +1,10 @@
 package com.cooperativabeb.view;
 
 import com.cooperativabeb.dao.ClienteDAO;
+import com.cooperativabeb.dao.CuentaAhorroDAO;
 import com.cooperativabeb.dao.TransaccionDAO;
 import com.cooperativabeb.model.Cliente;
+import com.cooperativabeb.model.CuentaAhorro;
 import com.cooperativabeb.model.Transaccion;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -14,8 +16,10 @@ public class MainFrame extends JFrame {
 
     private String usuarioActual;
     private ClienteDAO clienteDAO = new ClienteDAO();
+    private CuentaAhorroDAO cuentaDAO = new CuentaAhorroDAO();
     private TransaccionDAO transaccionDAO = new TransaccionDAO();
     private JTable tablaClientes;
+    private JTable tablaCuentas;
     private JTable tablaTransacciones;
 
     public MainFrame(String usuario) {
@@ -27,10 +31,9 @@ public class MainFrame extends JFrame {
     private void initComponents() {
         setTitle("Cooperativa BEB — Panel Principal");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1000, 650);
+        setSize(1100, 680);
         setLocationRelativeTo(null);
 
-        // Barra superior
         JPanel panelTop = new JPanel(new BorderLayout());
         panelTop.setBorder(new EmptyBorder(10, 20, 10, 20));
         panelTop.setBackground(new Color(30, 30, 46));
@@ -45,10 +48,7 @@ public class MainFrame extends JFrame {
         JButton btnCerrar = new JButton("Cerrar Sesion");
         btnCerrar.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         btnCerrar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnCerrar.addActionListener(e -> {
-            dispose();
-            new LoginFrame().setVisible(true);
-        });
+        btnCerrar.addActionListener(e -> { dispose(); new LoginFrame().setVisible(true); });
 
         panelTop.add(lblSistema, BorderLayout.WEST);
         panelTop.add(lblBienvenida, BorderLayout.CENTER);
@@ -57,6 +57,7 @@ public class MainFrame extends JFrame {
         JTabbedPane tabs = new JTabbedPane();
         tabs.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         tabs.addTab("Clientes", crearPanelClientes());
+        tabs.addTab("Cuentas de ahorro", crearPanelCuentas());
         tabs.addTab("Transacciones recientes", crearPanelTransacciones());
 
         add(panelTop, BorderLayout.NORTH);
@@ -67,18 +68,15 @@ public class MainFrame extends JFrame {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        // Busqueda
         JPanel panelBusqueda = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        JLabel lblBuscar = new JLabel("Buscar:");
         JTextField txtBuscar = new JTextField(22);
         JButton btnBuscar = new JButton("Buscar");
         JButton btnVerTodos = new JButton("Ver todos");
-        panelBusqueda.add(lblBuscar);
+        panelBusqueda.add(new JLabel("Buscar:"));
         panelBusqueda.add(txtBuscar);
         panelBusqueda.add(btnBuscar);
         panelBusqueda.add(btnVerTodos);
 
-        // Tabla
         String[] cols = {"ID", "DNI", "Nombre completo", "Telefono", "Email", "Estado"};
         tablaClientes = new JTable(new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
@@ -87,82 +85,103 @@ public class MainFrame extends JFrame {
         tablaClientes.setRowHeight(28);
         tablaClientes.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
         tablaClientes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane scroll = new JScrollPane(tablaClientes);
 
-        // Botones CRUD
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        JButton btnNuevo    = new JButton("+ Nuevo cliente");
-        JButton btnEditar   = new JButton("Editar");
+        JButton btnNuevo = new JButton("+ Nuevo cliente");
+        JButton btnEditar = new JButton("Editar");
         JButton btnDesactivar = new JButton("Desactivar");
-
         btnNuevo.setBackground(new Color(100, 149, 237));
         btnNuevo.setForeground(Color.WHITE);
         btnNuevo.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btnNuevo.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnEditar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnDesactivar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
         panelBotones.add(btnNuevo);
         panelBotones.add(btnEditar);
         panelBotones.add(btnDesactivar);
 
         panel.add(panelBusqueda, BorderLayout.NORTH);
-        panel.add(scroll, BorderLayout.CENTER);
+        panel.add(new JScrollPane(tablaClientes), BorderLayout.CENTER);
         panel.add(panelBotones, BorderLayout.SOUTH);
 
-        // Acciones
         btnBuscar.addActionListener(e -> {
-            String texto = txtBuscar.getText().trim();
-            if (!texto.isEmpty())
-                cargarTablaClientes(clienteDAO.buscarPorNombre(texto));
+            String t = txtBuscar.getText().trim();
+            if (!t.isEmpty()) cargarTablaClientes(clienteDAO.buscarPorNombre(t));
         });
         btnVerTodos.addActionListener(e -> {
             txtBuscar.setText("");
             cargarTablaClientes(clienteDAO.listarTodos());
         });
-
         btnNuevo.addActionListener(e -> {
             ClienteFormDialog form = new ClienteFormDialog(this, null);
             form.setVisible(true);
-            if (form.isGuardado())
-                cargarTablaClientes(clienteDAO.listarTodos());
+            if (form.isGuardado()) cargarTablaClientes(clienteDAO.listarTodos());
         });
-
         btnEditar.addActionListener(e -> {
             int fila = tablaClientes.getSelectedRow();
-            if (fila < 0) {
-                JOptionPane.showMessageDialog(this, "Seleccione un cliente para editar");
-                return;
-            }
-            int id = (int) tablaClientes.getValueAt(fila, 0);
-            Cliente c = clienteDAO.buscarPorId(id);
+            if (fila < 0) { JOptionPane.showMessageDialog(this, "Seleccione un cliente"); return; }
+            Cliente c = clienteDAO.buscarPorId((int) tablaClientes.getValueAt(fila, 0));
             if (c != null) {
                 ClienteFormDialog form = new ClienteFormDialog(this, c);
                 form.setVisible(true);
-                if (form.isGuardado())
-                    cargarTablaClientes(clienteDAO.listarTodos());
+                if (form.isGuardado()) cargarTablaClientes(clienteDAO.listarTodos());
             }
         });
-
         btnDesactivar.addActionListener(e -> {
             int fila = tablaClientes.getSelectedRow();
-            if (fila < 0) {
-                JOptionPane.showMessageDialog(this, "Seleccione un cliente");
-                return;
-            }
+            if (fila < 0) { JOptionPane.showMessageDialog(this, "Seleccione un cliente"); return; }
             int id = (int) tablaClientes.getValueAt(fila, 0);
             String nombre = tablaClientes.getValueAt(fila, 2).toString();
-            int confirm = JOptionPane.showConfirmDialog(this,
-                "Desactivar a " + nombre + "?", "Confirmar",
-                JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (confirm == JOptionPane.YES_OPTION) {
-                if (clienteDAO.eliminar(id)) {
-                    JOptionPane.showMessageDialog(this, "Cliente desactivado correctamente");
-                    cargarTablaClientes(clienteDAO.listarTodos());
-                }
+            int ok = JOptionPane.showConfirmDialog(this, "Desactivar a " + nombre + "?",
+                "Confirmar", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (ok == JOptionPane.YES_OPTION && clienteDAO.eliminar(id)) {
+                JOptionPane.showMessageDialog(this, "Cliente desactivado");
+                cargarTablaClientes(clienteDAO.listarTodos());
             }
         });
+        return panel;
+    }
 
+    private JPanel crearPanelCuentas() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(new EmptyBorder(15, 15, 15, 15));
+
+        String[] cols = {"ID", "Nro. cuenta", "ID Cliente", "Saldo", "Tipo", "Estado", "Apertura"};
+        tablaCuentas = new JTable(new DefaultTableModel(cols, 0) {
+            public boolean isCellEditable(int r, int c) { return false; }
+        });
+        tablaCuentas.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        tablaCuentas.setRowHeight(28);
+        tablaCuentas.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
+        tablaCuentas.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        JButton btnOperar = new JButton("Deposito / Retiro");
+        JButton btnRefrescar = new JButton("Refrescar");
+        btnOperar.setBackground(new Color(100, 149, 237));
+        btnOperar.setForeground(Color.WHITE);
+        btnOperar.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnOperar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnRefrescar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        panelBotones.add(btnOperar);
+        panelBotones.add(btnRefrescar);
+
+        panel.add(new JScrollPane(tablaCuentas), BorderLayout.CENTER);
+        panel.add(panelBotones, BorderLayout.SOUTH);
+
+        btnRefrescar.addActionListener(e -> cargarTablaCuentas());
+        btnOperar.addActionListener(e -> {
+            int fila = tablaCuentas.getSelectedRow();
+            if (fila < 0) { JOptionPane.showMessageDialog(this, "Seleccione una cuenta"); return; }
+            String nro = tablaCuentas.getValueAt(fila, 1).toString();
+            CuentaAhorro cuenta = cuentaDAO.buscarPorNro(nro);
+            if (cuenta != null) {
+                CuentaOperacionDialog op = new CuentaOperacionDialog(this, cuenta);
+                op.setVisible(true);
+                cargarTablaCuentas();
+                cargarTablaTransacciones();
+            }
+        });
         return panel;
     }
 
@@ -189,32 +208,35 @@ public class MainFrame extends JFrame {
 
     private void cargarDatos() {
         cargarTablaClientes(clienteDAO.listarTodos());
+        cargarTablaCuentas();
         cargarTablaTransacciones();
     }
 
     private void cargarTablaClientes(List<Cliente> lista) {
-        DefaultTableModel model = (DefaultTableModel) tablaClientes.getModel();
-        model.setRowCount(0);
-        for (Cliente c : lista) {
-            model.addRow(new Object[]{
-                c.getIdCliente(), c.getDni(),
-                c.getNombreCompleto(), c.getTelefono(),
-                c.getEmail(), c.getEstado()
-            });
-        }
+        DefaultTableModel m = (DefaultTableModel) tablaClientes.getModel();
+        m.setRowCount(0);
+        for (Cliente c : lista)
+            m.addRow(new Object[]{c.getIdCliente(), c.getDni(),
+                c.getNombreCompleto(), c.getTelefono(), c.getEmail(), c.getEstado()});
+    }
+
+    private void cargarTablaCuentas() {
+        DefaultTableModel m = (DefaultTableModel) tablaCuentas.getModel();
+        m.setRowCount(0);
+        for (CuentaAhorro c : cuentaDAO.listarTodas())
+            m.addRow(new Object[]{c.getIdCuenta(), c.getNroCuenta(),
+                c.getIdCliente(), String.format("S/. %.2f", c.getSaldo()),
+                c.getTipoCuenta(), c.getEstado(), c.getFechaApertura()});
     }
 
     private void cargarTablaTransacciones() {
-        DefaultTableModel model = (DefaultTableModel) tablaTransacciones.getModel();
-        model.setRowCount(0);
-        for (Transaccion t : transaccionDAO.listarUltimas(20)) {
-            model.addRow(new Object[]{
-                t.getIdTransaccion(), t.getTipo(),
+        DefaultTableModel m = (DefaultTableModel) tablaTransacciones.getModel();
+        m.setRowCount(0);
+        for (Transaccion t : transaccionDAO.listarUltimas(20))
+            m.addRow(new Object[]{t.getIdTransaccion(), t.getTipo(),
                 String.format("S/. %.2f", t.getMonto()),
                 String.format("S/. %.2f", t.getSaldoAnterior()),
                 String.format("S/. %.2f", t.getSaldoPosterior()),
-                t.getFechaTransaccion(), t.getEstado()
-            });
-        }
+                t.getFechaTransaccion(), t.getEstado()});
     }
 }
