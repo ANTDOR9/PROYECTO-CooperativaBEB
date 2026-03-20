@@ -3,6 +3,7 @@ package com.cooperativabeb.dao;
 import com.cooperativabeb.connection.ConexionOracle;
 import com.cooperativabeb.model.UsuarioSistema;
 import java.sql.*;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
