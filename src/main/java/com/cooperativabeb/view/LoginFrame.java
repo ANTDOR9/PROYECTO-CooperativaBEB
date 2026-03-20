@@ -22,7 +22,7 @@ public class LoginFrame extends JFrame {
     private void initComponents() {
         setTitle("Cooperativa BEB — Acceso al Sistema");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(460, 560);
+        setSize(420, 580);
         setLocationRelativeTo(null);
         setResizable(false);
 
@@ -39,7 +39,7 @@ public class LoginFrame extends JFrame {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(new Color(10, 10, 10, 210));
         panel.setBorder(new EmptyBorder(28, 36, 28, 36));
-        panel.setPreferredSize(new Dimension(380, 530));
+        panel.setPreferredSize(new Dimension(390, 530));
 
         GridBagConstraints g = new GridBagConstraints();
         g.gridx = 0;
@@ -100,7 +100,7 @@ public class LoginFrame extends JFrame {
         lblU.setForeground(Tema.TEXTO_SECUNDARIO);
 
         txtUsuario = new JTextField();
-        txtUsuario.setPreferredSize(new Dimension(200, 38));
+        txtUsuario.setPreferredSize(new Dimension(270, 44));
         Tema.aplicarCampo(txtUsuario);
         txtUsuario.putClientProperty("JTextField.placeholderText", "Ingrese su usuario");
 
@@ -109,7 +109,7 @@ public class LoginFrame extends JFrame {
         lblP.setForeground(Tema.TEXTO_SECUNDARIO);
 
         txtPassword = new JPasswordField();
-        txtPassword.setPreferredSize(new Dimension(200, 38));
+        txtPassword.setPreferredSize(new Dimension(270, 44));
         txtPassword.setBackground(Tema.NEGRO_CARD);
         txtPassword.setForeground(Tema.TEXTO_PRINCIPAL);
         txtPassword.setCaretColor(Tema.DORADO_PRINCIPAL);
@@ -140,7 +140,7 @@ public class LoginFrame extends JFrame {
 
         // Botón
         btnIngresar = new JButton("INGRESAR AL SISTEMA");
-        btnIngresar.setPreferredSize(new Dimension(300, 44));
+        btnIngresar.setPreferredSize(new Dimension(420, 48));
         Tema.aplicarBotonPrimario(btnIngresar);
         btnIngresar.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
@@ -183,7 +183,18 @@ public class LoginFrame extends JFrame {
             return;
         }
 
-        if ((usuario.equals("admin") && password.equals("admin")) ||
+        if (usuario.equals("cliente") && password.equals("cliente")) {
+            lblMensaje.setText("Acceso correcto. Cargando...");
+            lblMensaje.setForeground(Tema.VERDE_EXITO);
+            btnIngresar.setEnabled(false);
+            fondo.detener();
+            Timer timer2 = new Timer(800, e -> {
+                dispose();
+                new ClienteFrame(1, "Cliente Demo").setVisible(true);
+            });
+            timer2.setRepeats(false);
+            timer2.start();
+        } else if ((usuario.equals("admin") && password.equals("admin")) ||
             (usuario.equals("asesor") && password.equals("asesor"))) {
             lblMensaje.setText("Acceso correcto. Cargando...");
             lblMensaje.setForeground(Tema.VERDE_EXITO);
