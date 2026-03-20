@@ -22,7 +22,7 @@ public class LoginFrame extends JFrame {
     private void initComponents() {
         setTitle("Cooperativa BEB — Acceso al Sistema");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(460, 620);
+        setSize(460, 560);
         setLocationRelativeTo(null);
         setResizable(false);
 
