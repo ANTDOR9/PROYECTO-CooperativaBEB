@@ -2,6 +2,9 @@ package com.cooperativabeb.view;
 
 import com.cooperativabeb.dao.ClienteDAO;
 import com.cooperativabeb.dao.CuentaAhorroDAO;
+import com.cooperativabeb.view.DashboardPanel;
+import com.cooperativabeb.view.ReportesPanel;
+import com.cooperativabeb.view.PlanInversionPanel;
 import com.cooperativabeb.dao.TransaccionDAO;
 import com.cooperativabeb.model.Cliente;
 import com.cooperativabeb.model.CuentaAhorro;
