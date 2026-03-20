@@ -4,11 +4,14 @@ import com.cooperativabeb.dao.CuentaAhorroDAO;
 import com.cooperativabeb.dao.TransaccionDAO;
 import com.cooperativabeb.model.CuentaAhorro;
 import com.cooperativabeb.model.Transaccion;
+import com.cooperativabeb.report.ReporteExcel;
+import com.cooperativabeb.report.ReportePDF;
 import com.cooperativabeb.util.Tema;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.File;
 import java.net.URL;
 import java.util.List;
 
@@ -41,7 +44,6 @@ public class ClienteFrame extends JFrame {
             if (imgUrl != null) setIconImage(new ImageIcon(imgUrl).getImage());
         } catch (Exception ignored) {}
 
-        // Fondo animado como base
         fondo = new FondoAnimado();
         fondo.setLayout(new BorderLayout());
         setContentPane(fondo);
@@ -53,7 +55,6 @@ public class ClienteFrame extends JFrame {
             BorderFactory.createMatteBorder(0, 0, 2, 0, Tema.DORADO_OSCURO),
             new EmptyBorder(12, 24, 12, 24)));
 
-        // Logo + nombre banco
         JPanel panelIzq = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
         panelIzq.setOpaque(false);
         try {
@@ -61,8 +62,7 @@ public class ClienteFrame extends JFrame {
             if (imgUrl != null) {
                 Image img = new ImageIcon(imgUrl).getImage()
                     .getScaledInstance(40, 40, Image.SCALE_SMOOTH);
-                JLabel lblIcono = new JLabel(new ImageIcon(img));
-                panelIzq.add(lblIcono);
+                panelIzq.add(new JLabel(new ImageIcon(img)));
             }
         } catch (Exception ignored) {}
 
@@ -78,7 +78,6 @@ public class ClienteFrame extends JFrame {
         panelNombreBanco.add(lblPortal);
         panelIzq.add(panelNombreBanco);
 
-        // Centro — bienvenida y saldo
         JPanel panelCentro = new JPanel(new GridLayout(2, 1, 0, 4));
         panelCentro.setOpaque(false);
         JLabel lblBienvenida = new JLabel("Bienvenido, " + nombreCliente, SwingConstants.CENTER);
@@ -90,7 +89,6 @@ public class ClienteFrame extends JFrame {
         panelCentro.add(lblBienvenida);
         panelCentro.add(lblSaldoTotal);
 
-        // Botón cerrar sesión — más grande y elegante
         JButton btnCerrar = new JButton("  Cerrar sesion  ");
         btnCerrar.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnCerrar.setBackground(Tema.NEGRO_CARD);
@@ -110,36 +108,29 @@ public class ClienteFrame extends JFrame {
         panelTop.add(panelCentro, BorderLayout.CENTER);
         panelTop.add(btnCerrar, BorderLayout.EAST);
 
-        // Panel contenido con fondo semi transparente
         JPanel panelContenido = new JPanel(new BorderLayout());
         panelContenido.setBackground(new Color(10, 10, 10, 180));
 
-        // Pestañas
         JTabbedPane tabs = new JTabbedPane();
         tabs.setFont(new Font("Segoe UI", Font.BOLD, 13));
         tabs.setBackground(new Color(15, 15, 15));
         tabs.setForeground(Tema.DORADO_PRINCIPAL);
-        tabs.setBorder(new EmptyBorder(0, 0, 0, 0));
         tabs.addTab("  Mis cuentas  ", crearPanelCuentas());
         tabs.addTab("  Mis transacciones  ", crearPanelTransacciones());
         tabs.addTab("  Mis inversiones  ", crearPanelInversiones());
         panelContenido.add(tabs, BorderLayout.CENTER);
 
-        // Barra estado inferior
         JPanel panelEstado = new JPanel(new BorderLayout());
         panelEstado.setBackground(new Color(5, 5, 5, 220));
         panelEstado.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(1, 0, 0, 0, Tema.NEGRO_BORDE),
             new EmptyBorder(5, 20, 5, 20)));
-
         JLabel lblEstado = new JLabel("Portal Cliente — Solo lectura");
         lblEstado.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         lblEstado.setForeground(Tema.TEXTO_SUTIL);
-
         JLabel lblVer = new JLabel("Cooperativa BEB v1.0 — SENATI 2025");
         lblVer.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         lblVer.setForeground(Tema.TEXTO_SUTIL);
-
         panelEstado.add(lblEstado, BorderLayout.WEST);
         panelEstado.add(lblVer, BorderLayout.EAST);
 
@@ -151,14 +142,24 @@ public class ClienteFrame extends JFrame {
     private JPanel crearPanelCuentas() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setOpaque(false);
-        panel.setBorder(new EmptyBorder(20, 20, 15, 20));
+        panel.setBorder(new EmptyBorder(16, 20, 12, 20));
 
-        JLabel lblTitulo = new JLabel("Mis cuentas de ahorro");
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblTitulo.setForeground(Tema.DORADO_PRINCIPAL);
-        lblTitulo.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 3, 0, 0, Tema.DORADO_PRINCIPAL),
-            new EmptyBorder(0, 10, 0, 0)));
+        // Título + botones reporte
+        JPanel panelNorth = new JPanel(new BorderLayout());
+        panelNorth.setOpaque(false);
+        panelNorth.setBorder(new EmptyBorder(0, 0, 10, 0));
+
+        JLabel lblTitulo = crearTitulo("Mis cuentas de ahorro");
+
+        JPanel panelBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        panelBtns.setOpaque(false);
+        JButton btnPDF   = crearBtnReporte("Descargar PDF",   new Color(180, 40, 40));
+        JButton btnExcel = crearBtnReporte("Descargar Excel", new Color(34, 139, 34));
+        panelBtns.add(btnPDF);
+        panelBtns.add(btnExcel);
+
+        panelNorth.add(lblTitulo, BorderLayout.WEST);
+        panelNorth.add(panelBtns, BorderLayout.EAST);
 
         String[] cols = {"Nro. Cuenta", "Saldo (S/.)", "Tipo", "Estado", "Fecha apertura"};
         tablaCuentas = new JTable(new DefaultTableModel(cols, 0) {
@@ -174,28 +175,41 @@ public class ClienteFrame extends JFrame {
         // Tarjetas resumen
         JPanel panelCards = new JPanel(new GridLayout(1, 3, 16, 0));
         panelCards.setOpaque(false);
-        panelCards.setBorder(new EmptyBorder(14, 0, 0, 0));
-        panelCards.add(crearCard("Total cuentas", "—", Tema.DORADO_PRINCIPAL, "tc"));
-        panelCards.add(crearCard("Saldo total", "—", Tema.VERDE_EXITO, "st"));
-        panelCards.add(crearCard("Cuentas activas", "—", Tema.TEXTO_SECUNDARIO, "ca"));
+        panelCards.setBorder(new EmptyBorder(12, 0, 0, 0));
+        panelCards.add(crearCard("Total cuentas", "—", Tema.DORADO_PRINCIPAL));
+        panelCards.add(crearCard("Saldo total", "—", Tema.VERDE_EXITO));
+        panelCards.add(crearCard("Cuentas activas", "—", Tema.TEXTO_SECUNDARIO));
 
-        panel.add(lblTitulo, BorderLayout.NORTH);
+        panel.add(panelNorth, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
         panel.add(panelCards, BorderLayout.SOUTH);
+
+        btnPDF.addActionListener(e -> generarReporte("PDF", "CUENTAS"));
+        btnExcel.addActionListener(e -> generarReporte("EXCEL", "CUENTAS"));
+
         return panel;
     }
 
     private JPanel crearPanelTransacciones() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setOpaque(false);
-        panel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        panel.setBorder(new EmptyBorder(16, 20, 16, 20));
 
-        JLabel lblTitulo = new JLabel("Mis transacciones recientes");
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblTitulo.setForeground(Tema.DORADO_PRINCIPAL);
-        lblTitulo.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 3, 0, 0, Tema.DORADO_PRINCIPAL),
-            new EmptyBorder(0, 10, 0, 0)));
+        JPanel panelNorth = new JPanel(new BorderLayout());
+        panelNorth.setOpaque(false);
+        panelNorth.setBorder(new EmptyBorder(0, 0, 10, 0));
+
+        JLabel lblTitulo = crearTitulo("Mis transacciones recientes");
+
+        JPanel panelBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        panelBtns.setOpaque(false);
+        JButton btnPDF   = crearBtnReporte("Descargar PDF",   new Color(180, 40, 40));
+        JButton btnExcel = crearBtnReporte("Descargar Excel", new Color(34, 139, 34));
+        panelBtns.add(btnPDF);
+        panelBtns.add(btnExcel);
+
+        panelNorth.add(lblTitulo, BorderLayout.WEST);
+        panelNorth.add(panelBtns, BorderLayout.EAST);
 
         String[] cols = {"Tipo", "Monto (S/.)", "Saldo anterior", "Saldo posterior", "Fecha", "Estado"};
         tablaTransacciones = new JTable(new DefaultTableModel(cols, 0) {
@@ -208,22 +222,35 @@ public class ClienteFrame extends JFrame {
         scroll.getViewport().setBackground(new Color(20, 20, 20));
         scroll.setBorder(BorderFactory.createLineBorder(Tema.NEGRO_BORDE, 1));
 
-        panel.add(lblTitulo, BorderLayout.NORTH);
+        panel.add(panelNorth, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
+
+        btnPDF.addActionListener(e -> generarReporte("PDF", "TRANSACCIONES"));
+        btnExcel.addActionListener(e -> generarReporte("EXCEL", "TRANSACCIONES"));
+
         return panel;
     }
 
     private JPanel crearPanelInversiones() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setOpaque(false);
-        panel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        panel.setBorder(new EmptyBorder(16, 20, 16, 20));
 
-        JLabel lblTitulo = new JLabel("Mis planes de inversion");
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        lblTitulo.setForeground(Tema.DORADO_PRINCIPAL);
-        lblTitulo.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 3, 0, 0, Tema.DORADO_PRINCIPAL),
-            new EmptyBorder(0, 10, 0, 0)));
+        JPanel panelNorth = new JPanel(new BorderLayout());
+        panelNorth.setOpaque(false);
+        panelNorth.setBorder(new EmptyBorder(0, 0, 10, 0));
+
+        JLabel lblTitulo = crearTitulo("Mis planes de inversion");
+
+        JPanel panelBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        panelBtns.setOpaque(false);
+        JButton btnPDF   = crearBtnReporte("Descargar PDF",   new Color(180, 40, 40));
+        JButton btnExcel = crearBtnReporte("Descargar Excel", new Color(34, 139, 34));
+        panelBtns.add(btnPDF);
+        panelBtns.add(btnExcel);
+
+        panelNorth.add(lblTitulo, BorderLayout.WEST);
+        panelNorth.add(panelBtns, BorderLayout.EAST);
 
         String[] cols = {"ID", "Monto invertido", "Tasa %", "Plazo", "Vencimiento", "Ganancia est.", "Estado"};
         JTable tablaPlanes = new JTable(new DefaultTableModel(cols, 0) {
@@ -256,27 +283,97 @@ public class ClienteFrame extends JFrame {
             System.err.println("Error cargando planes: " + e.getMessage());
         }
 
-        panel.add(lblTitulo, BorderLayout.NORTH);
+        panel.add(panelNorth, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
+
+        btnPDF.addActionListener(e -> generarReporte("PDF", "PLANES"));
+        btnExcel.addActionListener(e -> generarReporte("EXCEL", "PLANES"));
+
         return panel;
     }
 
-    private JPanel crearCard(String titulo, String valor, Color color, String id) {
+    private void generarReporte(String formato, String tipo) {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setDialogTitle("Selecciona carpeta destino");
+        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+
+        String ruta = chooser.getSelectedFile().getAbsolutePath();
+
+        SwingWorker<String, Void> worker = new SwingWorker<>() {
+            @Override
+            protected String doInBackground() throws Exception {
+                if (formato.equals("PDF")) {
+                    return switch (tipo) {
+                        case "CUENTAS"       -> ReportePDF.generarReporteCuentas(ruta);
+                        case "TRANSACCIONES" -> ReportePDF.generarReporteTransacciones(ruta);
+                        case "PLANES"        -> ReportePDF.generarReportePlanes(ruta);
+                        default -> throw new Exception("Tipo desconocido");
+                    };
+                } else {
+                    return switch (tipo) {
+                        case "CUENTAS"       -> ReporteExcel.generarReporteCuentas(ruta);
+                        case "TRANSACCIONES" -> ReporteExcel.generarReporteTransacciones(ruta);
+                        case "PLANES"        -> ReporteExcel.generarReportePlanes(ruta);
+                        default -> throw new Exception("Tipo desconocido");
+                    };
+                }
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    String archivo = get();
+                    int abrir = JOptionPane.showConfirmDialog(ClienteFrame.this,
+                        "Reporte generado: " + new File(archivo).getName() +
+                        "\n\n¿Abrir la carpeta?", "Descarga completa",
+                        JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                    if (abrir == JOptionPane.YES_OPTION)
+                        Desktop.getDesktop().open(new File(ruta));
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(ClienteFrame.this,
+                        "Error: " + e.getMessage(), "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private JLabel crearTitulo(String texto) {
+        JLabel lbl = new JLabel(texto);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lbl.setForeground(Tema.DORADO_PRINCIPAL);
+        lbl.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 3, 0, 0, Tema.DORADO_PRINCIPAL),
+            new EmptyBorder(0, 10, 0, 0)));
+        return lbl;
+    }
+
+    private JButton crearBtnReporte(String texto, Color color) {
+        JButton btn = new JButton(texto);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btn.setBackground(color);
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setBorder(new EmptyBorder(7, 14, 7, 14));
+        return btn;
+    }
+
+    private JPanel crearCard(String titulo, String valor, Color color) {
         JPanel card = new JPanel(new BorderLayout(4, 6));
         card.setBackground(new Color(15, 15, 15, 200));
         card.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(0, 3, 0, 0, color),
             new EmptyBorder(12, 16, 12, 16)));
-
         JLabel lblT = new JLabel(titulo);
         lblT.setFont(Tema.FUENTE_PEQUEÑA);
         lblT.setForeground(Tema.TEXTO_SECUNDARIO);
-
         JLabel lblV = new JLabel(valor);
         lblV.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblV.setForeground(color);
-        lblV.setName(id);
-
         card.add(lblT, BorderLayout.NORTH);
         card.add(lblV, BorderLayout.CENTER);
         return card;
@@ -284,12 +381,10 @@ public class ClienteFrame extends JFrame {
 
     private void cargarDatos() {
         List<CuentaAhorro> cuentas = cuentaDAO.listarPorCliente(idCliente);
-
         DefaultTableModel modelCuentas = (DefaultTableModel) tablaCuentas.getModel();
         modelCuentas.setRowCount(0);
         double saldoTotal = 0;
         int activas = 0;
-
         for (CuentaAhorro c : cuentas) {
             modelCuentas.addRow(new Object[]{
                 c.getNroCuenta(),
@@ -301,7 +396,6 @@ public class ClienteFrame extends JFrame {
             saldoTotal += c.getSaldo();
             if (c.getEstado().equals("ACTIVA")) activas++;
         }
-
         lblSaldoTotal.setText(String.format("Saldo total disponible: S/. %.2f", saldoTotal));
 
         DefaultTableModel modelTrans = (DefaultTableModel) tablaTransacciones.getModel();
