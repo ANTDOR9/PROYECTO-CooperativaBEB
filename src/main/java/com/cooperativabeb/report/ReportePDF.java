@@ -9,6 +9,7 @@ import com.cooperativabeb.model.CuentaAhorro;
 import com.cooperativabeb.model.PlanInversion;
 import com.cooperativabeb.model.Transaccion;
 import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.draw.LineSeparator;
 import com.itextpdf.text.pdf.*;
 import java.io.FileOutputStream;
 import java.io.IOException;
