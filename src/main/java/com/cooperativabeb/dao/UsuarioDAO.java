@@ -61,7 +61,7 @@ public class UsuarioDAO {
             ps.setString(2, u.getPassword());
             ps.setString(3, u.getRol());
             if (u.getIdCliente() > 0) ps.setInt(4, u.getIdCliente());
-            else ps.setNull(4, Types.NUMBER);
+            else ps.setNull(4, Types.NUMERIC);
             ps.setString(5, u.getNombreCompleto());
             ps.setString(6, u.getEmail());
             ps.setString(7, u.getEstado() != null ? u.getEstado() : "ACTIVO");
