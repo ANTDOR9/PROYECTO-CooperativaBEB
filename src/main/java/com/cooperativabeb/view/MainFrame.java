@@ -56,6 +56,8 @@ public class MainFrame extends JFrame {
 
         JTabbedPane tabs = new JTabbedPane();
         tabs.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        tabs.addTab("Dashboard", new DashboardPanel());
+        tabs.addTab("Reportes PDF", new ReportesPanel());
         tabs.addTab("Clientes", crearPanelClientes());
         tabs.addTab("Cuentas de ahorro", crearPanelCuentas());
         tabs.addTab("Planes de inversion", new PlanInversionPanel());
