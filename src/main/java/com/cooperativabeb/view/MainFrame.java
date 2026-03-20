@@ -3,6 +3,7 @@ package com.cooperativabeb.view;
 import com.cooperativabeb.dao.ClienteDAO;
 import com.cooperativabeb.dao.CuentaAhorroDAO;
 import com.cooperativabeb.view.DashboardPanel;
+import com.cooperativabeb.view.UsuariosPanel;
 import com.cooperativabeb.view.ReportesPanel;
 import com.cooperativabeb.view.PlanInversionPanel;
 import com.cooperativabeb.dao.TransaccionDAO;
@@ -60,6 +61,7 @@ public class MainFrame extends JFrame {
         JTabbedPane tabs = new JTabbedPane();
         tabs.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         tabs.addTab("Dashboard", new DashboardPanel());
+        tabs.addTab("Usuarios", new UsuariosPanel());
         tabs.addTab("Reportes PDF", new ReportesPanel());
         tabs.addTab("Clientes", crearPanelClientes());
         tabs.addTab("Cuentas de ahorro", crearPanelCuentas());
