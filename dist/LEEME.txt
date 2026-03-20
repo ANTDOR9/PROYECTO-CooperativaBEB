@@ -1,0 +1,12 @@
+=== COOPERATIVA BEB - Sistema Financiero ===
+
+REQUISITOS:
+- Java 21 instalado (Eclipse Temurin 21)
+- Oracle Database XE corriendo en localhost:1521
+
+USUARIOS:
+- admin / admin
+- asesor / asesor  
+- cliente / cliente
+
+=== SENATI 2025 ===
