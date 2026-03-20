@@ -13,6 +13,7 @@ public class LoginFrame extends JFrame {
     private JPasswordField txtPassword;
     private JButton btnIngresar;
     private JLabel lblMensaje;
+    private FondoAnimado fondo;
 
     public LoginFrame() {
         initComponents();
@@ -21,125 +22,144 @@ public class LoginFrame extends JFrame {
     private void initComponents() {
         setTitle("Cooperativa BEB — Acceso al Sistema");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(440, 560);
+        setSize(460, 620);
         setLocationRelativeTo(null);
         setResizable(false);
-        getContentPane().setBackground(Tema.NEGRO_FONDO);
 
-        // Icono de la ventana
         try {
             URL imgUrl = getClass().getClassLoader().getResource("logo.png");
             if (imgUrl != null) setIconImage(new ImageIcon(imgUrl).getImage());
         } catch (Exception ignored) {}
 
-        JPanel panelPrincipal = new JPanel(new BorderLayout(0, 0));
-        panelPrincipal.setBackground(Tema.NEGRO_FONDO);
-        panelPrincipal.setBorder(new EmptyBorder(30, 40, 30, 40));
+        fondo = new FondoAnimado();
+        fondo.setLayout(new GridBagLayout());
+        setContentPane(fondo);
 
-        // Panel logo superior
-        JPanel panelTop = new JPanel(new GridLayout(4, 1, 0, 8));
-        panelTop.setBackground(Tema.NEGRO_FONDO);
-        panelTop.setBorder(new EmptyBorder(0, 0, 25, 0));
+        // Panel central con GridBagLayout para control total
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(new Color(10, 10, 10, 210));
+        panel.setBorder(new EmptyBorder(28, 36, 28, 36));
+        panel.setPreferredSize(new Dimension(380, 530));
 
+        GridBagConstraints g = new GridBagConstraints();
+        g.gridx = 0;
+        g.fill = GridBagConstraints.HORIZONTAL;
+        g.weightx = 1.0;
+        g.anchor = GridBagConstraints.CENTER;
+
+        // Logo
         JLabel lblLogo = new JLabel();
         lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
         try {
             URL imgUrl = getClass().getClassLoader().getResource("logo.png");
             if (imgUrl != null) {
                 Image img = new ImageIcon(imgUrl).getImage()
-                    .getScaledInstance(90, 90, Image.SCALE_SMOOTH);
+                    .getScaledInstance(80, 80, Image.SCALE_SMOOTH);
                 lblLogo.setIcon(new ImageIcon(img));
             }
-        } catch (Exception e) {
-            lblLogo.setText("BEB");
-            lblLogo.setFont(new Font("Segoe UI", Font.BOLD, 36));
-            lblLogo.setForeground(Tema.DORADO_PRINCIPAL);
-        }
+        } catch (Exception ignored) {}
 
+        // Nombre
         JLabel lblNombre = new JLabel("COOPERATIVA BEB", SwingConstants.CENTER);
-        lblNombre.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblNombre.setFont(new Font("Segoe UI", Font.BOLD, 17));
         lblNombre.setForeground(Tema.DORADO_PRINCIPAL);
 
+        // Subtítulo
         JLabel lblSistema = new JLabel("Sistema Financiero Premium", SwingConstants.CENTER);
         lblSistema.setFont(Tema.FUENTE_PEQUEÑA);
         lblSistema.setForeground(Tema.TEXTO_SECUNDARIO);
 
+        // Separador
         JSeparator sep = new JSeparator();
         sep.setForeground(Tema.DORADO_OSCURO);
-        sep.setBackground(Tema.DORADO_OSCURO);
 
-        panelTop.add(lblLogo);
-        panelTop.add(lblNombre);
-        panelTop.add(lblSistema);
-        panelTop.add(sep);
+        // Fila icono VIP + campos
+        JPanel panelFila = new JPanel(new GridBagLayout());
+        panelFila.setOpaque(false);
 
-        // Panel formulario
-        JPanel panelForm = new JPanel(new GridBagLayout());
-        panelForm.setBackground(Tema.NEGRO_FONDO);
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(6, 0, 6, 0);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
+        // Icono VIP
+        JLabel lblVip = new JLabel();
+        lblVip.setHorizontalAlignment(SwingConstants.CENTER);
+        try {
+            URL vipUrl = getClass().getClassLoader().getResource("Icono_VIP_dorado.png");
+            if (vipUrl != null) {
+                Image vipImg = new ImageIcon(vipUrl).getImage()
+                    .getScaledInstance(60, 60, Image.SCALE_SMOOTH);
+                lblVip.setIcon(new ImageIcon(vipImg));
+            }
+        } catch (Exception ignored) {}
 
-        JLabel lblUsuario = new JLabel("Usuario");
-        lblUsuario.setFont(Tema.FUENTE_PEQUEÑA);
-        lblUsuario.setForeground(Tema.TEXTO_SECUNDARIO);
+        // Panel campos derecha
+        JPanel panelCampos = new JPanel(new GridBagLayout());
+        panelCampos.setOpaque(false);
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.gridx = 0; gc.fill = GridBagConstraints.HORIZONTAL; gc.weightx = 1.0;
+
+        JLabel lblU = new JLabel("Usuario");
+        lblU.setFont(Tema.FUENTE_PEQUEÑA);
+        lblU.setForeground(Tema.TEXTO_SECUNDARIO);
 
         txtUsuario = new JTextField();
-        txtUsuario.setPreferredSize(new Dimension(0, 42));
+        txtUsuario.setPreferredSize(new Dimension(200, 38));
         Tema.aplicarCampo(txtUsuario);
         txtUsuario.putClientProperty("JTextField.placeholderText", "Ingrese su usuario");
 
-        JLabel lblPassword = new JLabel("Contrasena");
-        lblPassword.setFont(Tema.FUENTE_PEQUEÑA);
-        lblPassword.setForeground(Tema.TEXTO_SECUNDARIO);
+        JLabel lblP = new JLabel("Contrasena");
+        lblP.setFont(Tema.FUENTE_PEQUEÑA);
+        lblP.setForeground(Tema.TEXTO_SECUNDARIO);
 
         txtPassword = new JPasswordField();
-        txtPassword.setPreferredSize(new Dimension(0, 42));
+        txtPassword.setPreferredSize(new Dimension(200, 38));
         txtPassword.setBackground(Tema.NEGRO_CARD);
         txtPassword.setForeground(Tema.TEXTO_PRINCIPAL);
         txtPassword.setCaretColor(Tema.DORADO_PRINCIPAL);
-        txtPassword.setBorder(javax.swing.BorderFactory.createCompoundBorder(
-            javax.swing.BorderFactory.createLineBorder(Tema.NEGRO_BORDE, 1),
-            javax.swing.BorderFactory.createEmptyBorder(6, 10, 6, 10)));
+        txtPassword.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Tema.NEGRO_BORDE, 1),
+            new EmptyBorder(6, 10, 6, 10)));
         txtPassword.setFont(Tema.FUENTE_NORMAL);
         txtPassword.putClientProperty("JTextField.placeholderText", "Ingrese su contrasena");
 
-        lblMensaje = new JLabel("", SwingConstants.CENTER);
-        lblMensaje.setFont(Tema.FUENTE_PEQUEÑA);
+        gc.gridy=0; gc.insets=new Insets(0,0,3,0); panelCampos.add(lblU, gc);
+        gc.gridy=1; gc.insets=new Insets(0,0,6,0); panelCampos.add(txtUsuario, gc);
+        gc.gridy=2; gc.insets=new Insets(0,0,3,0); panelCampos.add(lblP, gc);
+        gc.gridy=3; gc.insets=new Insets(0,0,0,0); panelCampos.add(txtPassword, gc);
 
+        // Armar fila VIP + campos
+        GridBagConstraints gf = new GridBagConstraints();
+        gf.gridy = 0; gf.insets = new Insets(0, 0, 0, 14);
+        gf.anchor = GridBagConstraints.CENTER;
+        panelFila.add(lblVip, gf);
+        gf.gridx = 1; gf.insets = new Insets(0,0,0,0);
+        gf.fill = GridBagConstraints.HORIZONTAL; gf.weightx = 1.0;
+        panelFila.add(panelCampos, gf);
+
+        // Mensaje
+        lblMensaje = new JLabel(" ", SwingConstants.CENTER);
+        lblMensaje.setFont(Tema.FUENTE_PEQUEÑA);
+        lblMensaje.setForeground(Tema.ROJO_ERROR);
+
+        // Botón
         btnIngresar = new JButton("INGRESAR AL SISTEMA");
-        btnIngresar.setPreferredSize(new Dimension(0, 44));
+        btnIngresar.setPreferredSize(new Dimension(300, 44));
         Tema.aplicarBotonPrimario(btnIngresar);
         btnIngresar.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
-        gbc.gridx=0; gbc.gridy=0;
-        panelForm.add(lblUsuario, gbc);
-        gbc.gridy=1;
-        panelForm.add(txtUsuario, gbc);
-        gbc.gridy=2;
-        panelForm.add(lblPassword, gbc);
-        gbc.gridy=3;
-        panelForm.add(txtPassword, gbc);
-        gbc.gridy=4;
-        panelForm.add(lblMensaje, gbc);
-        gbc.gridy=5;
-        gbc.insets = new Insets(12, 0, 0, 0);
-        panelForm.add(btnIngresar, gbc);
-
-        // Footer
-        JPanel panelBottom = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        panelBottom.setBackground(Tema.NEGRO_FONDO);
-        panelBottom.setBorder(new EmptyBorder(15, 0, 0, 0));
-        JLabel lblVersion = new JLabel("v1.0 — SENATI 2025");
+        // Versión
+        JLabel lblVersion = new JLabel("v1.0 — SENATI 2025", SwingConstants.CENTER);
         lblVersion.setFont(Tema.FUENTE_PEQUEÑA);
         lblVersion.setForeground(Tema.TEXTO_SUTIL);
-        panelBottom.add(lblVersion);
 
-        panelPrincipal.add(panelTop, BorderLayout.NORTH);
-        panelPrincipal.add(panelForm, BorderLayout.CENTER);
-        panelPrincipal.add(panelBottom, BorderLayout.SOUTH);
-        add(panelPrincipal);
+        // Agregar todo al panel con espaciado
+        g.gridy=0;  g.insets=new Insets(0,0,6,0);   panel.add(lblLogo, g);
+        g.gridy=1;  g.insets=new Insets(0,0,3,0);   panel.add(lblNombre, g);
+        g.gridy=2;  g.insets=new Insets(0,0,12,0);  panel.add(lblSistema, g);
+        g.gridy=3;  g.insets=new Insets(0,0,16,0);  panel.add(sep, g);
+        g.gridy=4;  g.insets=new Insets(0,0,8,0);   panel.add(panelFila, g);
+        g.gridy=5;  g.insets=new Insets(0,0,4,0);   panel.add(lblMensaje, g);
+        g.gridy=6;  g.insets=new Insets(0,0,14,0);  panel.add(btnIngresar, g);
+        g.gridy=7;  g.insets=new Insets(0,0,0,0);   panel.add(lblVersion, g);
+
+        fondo.add(panel, new GridBagConstraints());
 
         btnIngresar.addActionListener(e -> validarLogin());
         txtPassword.addActionListener(e -> validarLogin());
@@ -168,6 +188,7 @@ public class LoginFrame extends JFrame {
             lblMensaje.setText("Acceso correcto. Cargando...");
             lblMensaje.setForeground(Tema.VERDE_EXITO);
             btnIngresar.setEnabled(false);
+            fondo.detener();
             Timer timer = new Timer(800, e -> {
                 dispose();
                 new MainFrame(usuario).setVisible(true);
