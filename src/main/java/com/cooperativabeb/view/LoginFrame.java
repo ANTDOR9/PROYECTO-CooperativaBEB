@@ -37,7 +37,7 @@ public class LoginFrame extends JFrame {
 
         // Panel central con GridBagLayout para control total
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(new Color(10, 10, 10, 210));
+        panel.setBackground(new Color(10, 10, 10, 120));
         panel.setBorder(new EmptyBorder(28, 36, 28, 36));
         panel.setPreferredSize(new Dimension(390, 530));
 
