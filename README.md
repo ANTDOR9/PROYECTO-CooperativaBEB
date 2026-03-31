@@ -1,4 +1,3 @@
-
 # 🏦 Sistema Financiero — Cooperativa BEB
 
 > Trabajo Final del curso **Programación para Desarrollo de Software with Oracle**
@@ -9,21 +8,22 @@
 ## 📋 Descripción
 
 Sistema de gestión financiera desarrollado en **Java SE** con interfaz gráfica **Swing**
-y base de datos **Oracle**, diseñado para digitalizar y optimizar las operaciones
+y base de datos **Oracle 11g XE**, diseñado para digitalizar y optimizar las operaciones
 internas de la Cooperativa "BEB". Permite administrar clientes, cuentas de ahorro,
 créditos personales, planes de inversión y el trabajo de asesores financieros desde
-una sola plataforma de escritorio.
+una sola plataforma de escritorio con estética premium negro + dorado.
 
 ---
 
 ## 🎯 Objetivos del proyecto
 
-- Rediseñar la base de datos con un modelo relacional normalizado en Oracle
+- Rediseñar la base de datos con un modelo relacional normalizado en Oracle 11g
 - Implementar historificación de datos para auditoría de cambios
 - Desarrollar una interfaz moderna y funcional con Java Swing + FlatLaf
-- Conectar la aplicación a Oracle mediante JDBC con pool de conexiones (HikariCP)
+- Conectar la aplicación a Oracle mediante JDBC con pool de conexiones
 - Generar reportes exportables en PDF (iText) y Excel (Apache POI)
 - Aplicar consultas avanzadas: subconsultas, JOINs, GROUP BY, ROLLUP, CUBE
+- Implementar sistema de roles: Admin, Asesor y Cliente
 
 ---
 
@@ -37,26 +37,35 @@ una sola plataforma de escritorio.
 | 💳 Transacción        | Historial completo de operaciones financieras    |
 | 🏷️ Producto Financiero| Catálogo de productos ofrecidos por la coop.     |
 | 🧑‍💼 Asesor Financiero  | Gestión de cartera y asignación de clientes      |
+| 🔐 Usuario Sistema    | Gestión de accesos con roles diferenciados       |
 
 ---
 
 ## 🛠️ Tecnologías utilizadas
 
-- **Lenguaje:** Java SE 17+
-- **UI:** Java Swing + FlatLaf (tema moderno)
-- **Base de datos:** Oracle Database
-- **Conectividad:** JDBC + HikariCP (pool de conexiones)
-- **Reportes:** iText (PDF) · Apache POI (Excel)
-- **Gráficos:** JFreeChart
+- **Lenguaje:** Java SE 21 (Eclipse Temurin 21)
+- **UI:** Java Swing + FlatLaf Dark (tema negro + dorado premium)
+- **Base de datos:** Oracle Database 11g XE
+- **Conectividad:** JDBC (ojdbc6)
+- **Reportes:** iText 5 (PDF) · Apache POI (Excel)
+- **Gráficos:** JFreeChart (dashboard con barras y torta)
 - **Logging:** Log4j2
-- **Testing:** JUnit 5
 - **Build:** Apache Maven
 - **Control de versiones:** Git + GitHub
 
 ---
 
-## 📁 Estructura del proyecto
+## 👥 Roles del sistema
 
+| Rol | Usuario | Contraseña | Acceso |
+|-----|---------|------------|--------|
+| Administrador | `admin` | `admin` | Panel completo |
+| Asesor | `asesor` | `asesor` | Panel completo |
+| Cliente | `cliente` | `cliente` | Portal cliente |
+
+---
+
+## 📁 Estructura del proyecto
 ```
 CooperativaBEB/
 ├── src/
@@ -66,9 +75,9 @@ CooperativaBEB/
 │   │   ├── controller/     # Lógica entre view y dao
 │   │   ├── dao/            # Acceso a datos con JDBC
 │   │   ├── service/        # Lógica financiera y simuladores
-│   │   ├── connection/     # Singleton JDBC + HikariCP
+│   │   ├── connection/     # Singleton JDBC
 │   │   ├── report/         # Generación PDF y Excel
-│   │   ├── util/           # Utilidades y helpers
+│   │   ├── util/           # Tema visual y helpers
 │   │   └── exception/      # Excepciones personalizadas
 │   └── test/               # Pruebas JUnit 5
 ├── database/
@@ -79,62 +88,108 @@ CooperativaBEB/
 │   ├── 05_triggers.sql
 │   ├── 06_vistas.sql
 │   ├── 07_consultas_adv.sql
-│   └── diagrams/           # Modelo ER y diagramas
-├── docs/                   # Manual de usuario y arquitectura
-├── resources/
-│   ├── db.properties.example
-│   ├── log4j2.xml
-│   ├── icons/
-│   └── templates/
+│   └── 08_usuarios.sql
+├── dist/                   # JAR ejecutable listo para entregar
+│   ├── CooperativaBEB.jar
+│   ├── libs/
+│   ├── EJECUTAR.bat
+│   └── LEEME.txt
+├── docs/                   # Diagramas y documentación
+├── resources/              # Logo, íconos, configuración
 └── pom.xml
 ```
 
 ---
 
-## ⚙️ Configuración inicial
+## ⚙️ Requisitos para ejecutar
 
-1. Clona el repositorio
-   ```bash
-   git clone https://github.com/tu-usuario/CooperativaBEB.git
-   ```
+1. **Java 21** (Eclipse Temurin 21)
+   - Descargar: https://adoptium.net/temurin/releases/?version=21
+   - Verificar: `java -version` debe mostrar versión 21
 
-2. Copia y configura las credenciales de Oracle
-   ```bash
-   cp resources/db.properties.example resources/db.properties
-   ```
-   Edita `db.properties` con tu usuario, contraseña y URL de Oracle.
+2. **Oracle Database 11g XE** corriendo en `localhost:1521`
 
-3. Ejecuta los scripts SQL en orden
-   ```bash
-   # En SQL*Plus o SQL Developer, ejecuta:
-   01_ddl_tablas.sql → 02_dml_datos.sql → 03_historificacion.sql ...
-   ```
+---
 
-4. Compila y ejecuta con Maven
-   ```bash
-   mvn clean install
-   mvn exec:java -Dexec.mainClass="com.cooperativabeb.Main"
-   ```
+## 🚀 Instalación y configuración
+
+**Opción A — JAR ejecutable (recomendado):**
+```bash
+# 1. Ir a la carpeta dist/
+# 2. Editar db.properties con tu contraseña Oracle
+# 3. Doble clic en EJECUTAR.bat
+```
+
+**Opción B — Desde el código fuente:**
+```bash
+git clone https://github.com/ANTDOR9/PROYECTO-CooperativaBEB.git
+cd PROYECTO-CooperativaBEB
+cp src/main/resources/db.properties.example src/main/resources/db.properties
+# Editar db.properties con tu contraseña Oracle
+mvn clean package
+java -jar target/CooperativaBEB.jar
+```
+
+**Scripts SQL — ejecutar en orden en SQL Developer:**
+```
+01_ddl_tablas.sql → 02_dml_datos.sql → 03_historificacion.sql
+04_procedures.sql → 05_triggers.sql  → 06_vistas.sql
+07_consultas_adv.sql → 08_usuarios.sql
+```
+
+---
+
+## ✨ Funcionalidades principales
+
+### Panel Administrador
+- Dashboard con gráficos JFreeChart (saldos y transacciones)
+- Gestión completa de clientes (CRUD con validaciones)
+- Cuentas de ahorro: abrir, depositar, retirar con historial
+- Planes de inversión con simulador de ganancias
+- Gestión de usuarios y roles desde la interfaz
+- Reportes PDF y Excel: clientes, cuentas, transacciones, planes
+- Historial de transacciones en tiempo real
+
+### Portal Cliente
+- Vista personalizada solo con sus propios datos
+- Mis cuentas de ahorro con saldo actual
+- Mis transacciones recientes
+- Mis planes de inversión con ganancia estimada
+- Descarga de reportes PDF y Excel propios
+- Fondo animado con partículas y líneas doradas
+
+### Estética premium
+- Paleta negro + dorado (#C9A84C)
+- Splash screen con logo y barra de carga animada
+- Login con fondo animado (líneas doradas + partículas)
+- Ícono personalizado de la cooperativa
 
 ---
 
 ## 📌 Estado del proyecto
 
-| Módulo              | Estado        |
-|---------------------|---------------|
-| Modelo ER y BD      | 🔄 En progreso |
-| Scripts SQL         | 🔄 En progreso |
-| Conexión JDBC       | ⏳ Pendiente   |
-| Interfaz Swing      | ⏳ Pendiente   |
-| Reportes PDF/Excel  | ⏳ Pendiente   |
-| Dashboard gráfico   | ⏳ Pendiente   |
-| Testing JUnit       | ⏳ Pendiente   |
+| Módulo                | Estado        |
+|-----------------------|---------------|
+| Modelo ER y BD        | ✅ Completado  |
+| Scripts SQL           | ✅ Completado  |
+| Historificación       | ✅ Completado  |
+| Stored Procedures     | ✅ Completado  |
+| Triggers              | ✅ Completado  |
+| Vistas y consultas    | ✅ Completado  |
+| Conexión JDBC         | ✅ Completado  |
+| Interfaz Swing        | ✅ Completado  |
+| Reportes PDF/Excel    | ✅ Completado  |
+| Dashboard JFreeChart  | ✅ Completado  |
+| Roles de usuario      | ✅ Completado  |
+| Portal Cliente        | ✅ Completado  |
+| Fondo animado         | ✅ Completado  |
+| JAR ejecutable        | ✅ Completado  |
 
 ---
 
 ## 👨‍🎓 Autor
 
-**ANTHONY DORLY HUILAHUAÑA CHATA**
+**Anthony Dorly Huilahuaña Chata**
 Estudiante — SENATI, Tecnologías de la Información
 Curso: Programación para Desarrollo de Software with Oracle
 
