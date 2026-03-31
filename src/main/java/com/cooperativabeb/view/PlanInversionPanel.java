@@ -25,6 +25,15 @@ public class PlanInversionPanel extends JPanel {
     private JTextField txtMonto;
     private JLabel lblTasa, lblPlazo, lblGanancia, lblMontoFinal;
 
+
+
+
+    public void refrescar() {
+        cargarDatos();
+    }
+
+
+
     public PlanInversionPanel() {
         initComponents();
         cargarDatos();

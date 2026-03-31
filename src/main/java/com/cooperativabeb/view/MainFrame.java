@@ -56,7 +56,17 @@ public class MainFrame extends JFrame {
 
         panelTop.add(lblSistema, BorderLayout.WEST);
         panelTop.add(lblBienvenida, BorderLayout.CENTER);
-        panelTop.add(btnCerrar, BorderLayout.EAST);
+
+        JButton btnRefrescar = new JButton("↻ Refrescar");
+        btnRefrescar.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btnRefrescar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnRefrescar.addActionListener(e -> cargarDatos());
+
+        JPanel panelDer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        panelDer.setOpaque(false);
+        panelDer.add(btnRefrescar);
+        panelDer.add(btnCerrar);
+        panelTop.add(panelDer, BorderLayout.EAST);
 
         JTabbedPane tabs = new JTabbedPane();
         tabs.setFont(new Font("Segoe UI", Font.PLAIN, 13));
