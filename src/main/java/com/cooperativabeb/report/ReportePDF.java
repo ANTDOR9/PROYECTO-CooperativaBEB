@@ -288,4 +288,143 @@ public class ReportePDF {
         pie.setSpacingBefore(20f);
         doc.add(pie);
     }
+
+    public static String generarReporteCuentasCliente(String rutaDestino, int idCliente)
+            throws DocumentException, IOException {
+        String archivo = rutaDestino + "/mis_cuentas_" +
+                new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".pdf";
+
+        Document doc = new Document(PageSize.A4.rotate());
+        PdfWriter.getInstance(doc, new FileOutputStream(archivo));
+        doc.open();
+        agregarEncabezado(doc, "Mis Cuentas de Ahorro");
+
+        CuentaAhorroDAO dao = new CuentaAhorroDAO();
+        List<CuentaAhorro> lista = dao.listarPorCliente(idCliente);
+
+        PdfPTable tabla = new PdfPTable(5);
+        tabla.setWidthPercentage(100);
+        tabla.setSpacingBefore(15f);
+        tabla.setWidths(new float[]{2f, 2f, 1.5f, 1.5f, 2f});
+
+        agregarHeaderTabla(tabla, new String[]{
+                "Nro. Cuenta", "Saldo (S/.)", "Tipo", "Estado", "Fecha apertura"
+        });
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        int fila = 0;
+        double total = 0;
+        for (CuentaAhorro c : lista) {
+            BaseColor bg = (fila % 2 == 0) ? COLOR_FILA_PAR : COLOR_FILA_IMPAR;
+            agregarCelda(tabla, c.getNroCuenta(), bg);
+            agregarCelda(tabla, String.format("S/. %.2f", c.getSaldo()), bg);
+            agregarCelda(tabla, c.getTipoCuenta(), bg);
+            agregarCelda(tabla, c.getEstado(), bg);
+            agregarCelda(tabla, c.getFechaApertura() != null ?
+                    sdf.format(c.getFechaApertura()) : "—", bg);
+            total += c.getSaldo();
+            fila++;
+        }
+
+        doc.add(tabla);
+        Paragraph totalP = new Paragraph(
+                String.format("Saldo total: S/. %.2f", total), NEGRITA);
+        totalP.setAlignment(Element.ALIGN_RIGHT);
+        totalP.setSpacingBefore(10f);
+        doc.add(totalP);
+        agregarTotalRegistros(doc, lista.size());
+        agregarPiePagina(doc);
+        doc.close();
+        return archivo;
+    }
+
+    public static String generarReporteTransaccionesCliente(String rutaDestino, int idCliente)
+            throws DocumentException, IOException {
+        String archivo = rutaDestino + "/mis_transacciones_" +
+                new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".pdf";
+
+        Document doc = new Document(PageSize.A4.rotate());
+        PdfWriter.getInstance(doc, new FileOutputStream(archivo));
+        doc.open();
+        agregarEncabezado(doc, "Mis Transacciones");
+
+        CuentaAhorroDAO cuentaDAO = new CuentaAhorroDAO();
+        TransaccionDAO transDAO = new TransaccionDAO();
+        List<CuentaAhorro> cuentas = cuentaDAO.listarPorCliente(idCliente);
+
+        PdfPTable tabla = new PdfPTable(6);
+        tabla.setWidthPercentage(100);
+        tabla.setSpacingBefore(15f);
+        tabla.setWidths(new float[]{1.5f, 1.8f, 1.8f, 1.8f, 1.8f, 1.5f});
+
+        agregarHeaderTabla(tabla, new String[]{
+                "Tipo", "Monto (S/.)", "Saldo anterior", "Saldo posterior", "Fecha", "Estado"
+        });
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        int fila = 0;
+        for (CuentaAhorro c : cuentas) {
+            for (com.cooperativabeb.model.Transaccion t : transDAO.listarPorCuenta(c.getIdCuenta())) {
+                BaseColor bg = (fila % 2 == 0) ? COLOR_FILA_PAR : COLOR_FILA_IMPAR;
+                agregarCelda(tabla, t.getTipo(), bg);
+                agregarCelda(tabla, String.format("S/. %.2f", t.getMonto()), bg);
+                agregarCelda(tabla, String.format("S/. %.2f", t.getSaldoAnterior()), bg);
+                agregarCelda(tabla, String.format("S/. %.2f", t.getSaldoPosterior()), bg);
+                agregarCelda(tabla, t.getFechaTransaccion() != null ?
+                        sdf.format(t.getFechaTransaccion()) : "—", bg);
+                agregarCelda(tabla, t.getEstado(), bg);
+                fila++;
+            }
+        }
+
+        doc.add(tabla);
+        agregarTotalRegistros(doc, fila);
+        agregarPiePagina(doc);
+        doc.close();
+        return archivo;
+    }
+
+    public static String generarReportePlanesCliente(String rutaDestino, int idCliente)
+            throws DocumentException, IOException {
+        String archivo = rutaDestino + "/mis_planes_" +
+                new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".pdf";
+
+        Document doc = new Document(PageSize.A4.rotate());
+        PdfWriter.getInstance(doc, new FileOutputStream(archivo));
+        doc.open();
+        agregarEncabezado(doc, "Mis Planes de Inversion");
+
+        com.cooperativabeb.dao.PlanInversionDAO dao =
+                new com.cooperativabeb.dao.PlanInversionDAO();
+        List<com.cooperativabeb.model.PlanInversion> lista = dao.listarPorCliente(idCliente);
+
+        PdfPTable tabla = new PdfPTable(6);
+        tabla.setWidthPercentage(100);
+        tabla.setSpacingBefore(15f);
+        tabla.setWidths(new float[]{1.8f, 1.2f, 1f, 1.8f, 1.8f, 1.2f});
+
+        agregarHeaderTabla(tabla, new String[]{
+                "Monto invertido", "Tasa %", "Plazo", "Vencimiento", "Ganancia est.", "Estado"
+        });
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        int fila = 0;
+        for (com.cooperativabeb.model.PlanInversion p : lista) {
+            BaseColor bg = (fila % 2 == 0) ? COLOR_FILA_PAR : COLOR_FILA_IMPAR;
+            agregarCelda(tabla, String.format("S/. %.2f", p.getMontoInvertido()), bg);
+            agregarCelda(tabla, p.getTasaPactada() + "%", bg);
+            agregarCelda(tabla, p.getPlazoMeses() + " meses", bg);
+            agregarCelda(tabla, p.getFechaVencimiento() != null ?
+                    sdf.format(p.getFechaVencimiento()) : "—", bg);
+            agregarCelda(tabla, String.format("S/. %.2f", p.calcularGanancia()), bg);
+            agregarCelda(tabla, p.getEstado(), bg);
+            fila++;
+        }
+
+        doc.add(tabla);
+        agregarTotalRegistros(doc, lista.size());
+        agregarPiePagina(doc);
+        doc.close();
+        return archivo;
+    }
 }

@@ -288,16 +288,16 @@ public class ClienteFrame extends JFrame {
             protected String doInBackground() throws Exception {
                 if (formato.equals("PDF")) {
                     return switch (tipo) {
-                        case "CUENTAS"       -> ReportePDF.generarReporteCuentas(ruta);
-                        case "TRANSACCIONES" -> ReportePDF.generarReporteTransacciones(ruta);
-                        case "PLANES"        -> ReportePDF.generarReportePlanes(ruta);
+                        case "CUENTAS"       -> ReportePDF.generarReporteCuentasCliente(ruta, idCliente);
+                        case "TRANSACCIONES" -> ReportePDF.generarReporteTransaccionesCliente(ruta, idCliente);
+                        case "PLANES"        -> ReportePDF.generarReportePlanesCliente(ruta, idCliente);
                         default -> throw new Exception("Tipo desconocido");
                     };
                 } else {
                     return switch (tipo) {
-                        case "CUENTAS"       -> ReporteExcel.generarReporteCuentas(ruta);
-                        case "TRANSACCIONES" -> ReporteExcel.generarReporteTransacciones(ruta);
-                        case "PLANES"        -> ReporteExcel.generarReportePlanes(ruta);
+                        case "CUENTAS"       -> ReporteExcel.generarReporteCuentasCliente(ruta, idCliente);
+                        case "TRANSACCIONES" -> ReporteExcel.generarReporteTransaccionesCliente(ruta, idCliente);
+                        case "PLANES"        -> ReporteExcel.generarReportePlanesCliente(ruta, idCliente);
                         default -> throw new Exception("Tipo desconocido");
                     };
                 }
@@ -307,15 +307,15 @@ public class ClienteFrame extends JFrame {
                 try {
                     String archivo = get();
                     int abrir = JOptionPane.showConfirmDialog(ClienteFrame.this,
-                        "Reporte generado: " + new File(archivo).getName() +
-                        "\n\n¿Abrir la carpeta?", "Descarga completa",
-                        JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                            "Reporte generado: " + new File(archivo).getName() +
+                                    "\n\n¿Abrir la carpeta?", "Descarga completa",
+                            JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
                     if (abrir == JOptionPane.YES_OPTION)
                         Desktop.getDesktop().open(new File(ruta));
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(ClienteFrame.this,
-                        "Error: " + e.getMessage(), "Error",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Error: " + e.getMessage(), "Error",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             }
         };

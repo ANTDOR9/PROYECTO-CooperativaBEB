@@ -273,4 +273,138 @@ public class ReporteExcel {
         cell.setCellValue(valor);
         cell.setCellStyle(estilo);
     }
+
+    public static String generarReporteCuentasCliente(String rutaDestino, int idCliente)
+            throws IOException {
+        String archivo = rutaDestino + "/mis_cuentas_" +
+                new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".xlsx";
+
+        XSSFWorkbook wb = new XSSFWorkbook();
+        XSSFSheet sheet = wb.createSheet("Mis Cuentas");
+        String[] headers = {"Nro. Cuenta", "Saldo (S/.)", "Tipo", "Estado", "Apertura"};
+        agregarEncabezado(sheet, wb, "Mis Cuentas de Ahorro", headers.length);
+
+        Row rowHeader = sheet.createRow(2);
+        rowHeader.setHeight((short) 500);
+        XSSFCellStyle estiloH = crearEstiloHeader(wb);
+        for (int i = 0; i < headers.length; i++) {
+            Cell c = rowHeader.createCell(i);
+            c.setCellValue(headers[i]);
+            c.setCellStyle(estiloH);
+        }
+
+        List<CuentaAhorro> lista = new CuentaAhorroDAO().listarPorCliente(idCliente);
+        XSSFCellStyle par = crearEstiloFilaPar(wb);
+        XSSFCellStyle impar = crearEstiloFilaImpar(wb);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+
+        for (int i = 0; i < lista.size(); i++) {
+            CuentaAhorro c = lista.get(i);
+            Row row = sheet.createRow(i + 3);
+            XSSFCellStyle estilo = (i % 2 == 0) ? par : impar;
+            crearCelda(row, 0, c.getNroCuenta(), estilo);
+            crearCelda(row, 1, String.format("S/. %.2f", c.getSaldo()), estilo);
+            crearCelda(row, 2, c.getTipoCuenta(), estilo);
+            crearCelda(row, 3, c.getEstado(), estilo);
+            crearCelda(row, 4, c.getFechaApertura() != null ?
+                    sdf.format(c.getFechaApertura()) : "—", estilo);
+        }
+
+        for (int i = 0; i < headers.length; i++) sheet.autoSizeColumn(i);
+        try (FileOutputStream fos = new FileOutputStream(archivo)) { wb.write(fos); }
+        wb.close();
+        return archivo;
+    }
+
+    public static String generarReporteTransaccionesCliente(String rutaDestino, int idCliente)
+            throws IOException {
+        String archivo = rutaDestino + "/mis_transacciones_" +
+                new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".xlsx";
+
+        XSSFWorkbook wb = new XSSFWorkbook();
+        XSSFSheet sheet = wb.createSheet("Mis Transacciones");
+        String[] headers = {"Tipo", "Monto (S/.)", "Saldo anterior", "Saldo posterior", "Fecha", "Estado"};
+        agregarEncabezado(sheet, wb, "Mis Transacciones", headers.length);
+
+        Row rowHeader = sheet.createRow(2);
+        rowHeader.setHeight((short) 500);
+        XSSFCellStyle estiloH = crearEstiloHeader(wb);
+        for (int i = 0; i < headers.length; i++) {
+            Cell c = rowHeader.createCell(i);
+            c.setCellValue(headers[i]);
+            c.setCellStyle(estiloH);
+        }
+
+        CuentaAhorroDAO cuentaDAO = new CuentaAhorroDAO();
+        TransaccionDAO transDAO = new TransaccionDAO();
+        List<CuentaAhorro> cuentas = cuentaDAO.listarPorCliente(idCliente);
+        XSSFCellStyle par = crearEstiloFilaPar(wb);
+        XSSFCellStyle impar = crearEstiloFilaImpar(wb);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+
+        int rowNum = 3;
+        for (CuentaAhorro c : cuentas) {
+            for (com.cooperativabeb.model.Transaccion t : transDAO.listarPorCuenta(c.getIdCuenta())) {
+                Row row = sheet.createRow(rowNum);
+                XSSFCellStyle estilo = (rowNum % 2 == 0) ? par : impar;
+                crearCelda(row, 0, t.getTipo(), estilo);
+                crearCelda(row, 1, String.format("S/. %.2f", t.getMonto()), estilo);
+                crearCelda(row, 2, String.format("S/. %.2f", t.getSaldoAnterior()), estilo);
+                crearCelda(row, 3, String.format("S/. %.2f", t.getSaldoPosterior()), estilo);
+                crearCelda(row, 4, t.getFechaTransaccion() != null ?
+                        sdf.format(t.getFechaTransaccion()) : "—", estilo);
+                crearCelda(row, 5, t.getEstado(), estilo);
+                rowNum++;
+            }
+        }
+
+        for (int i = 0; i < headers.length; i++) sheet.autoSizeColumn(i);
+        try (FileOutputStream fos = new FileOutputStream(archivo)) { wb.write(fos); }
+        wb.close();
+        return archivo;
+    }
+
+    public static String generarReportePlanesCliente(String rutaDestino, int idCliente)
+            throws IOException {
+        String archivo = rutaDestino + "/mis_planes_" +
+                new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".xlsx";
+
+        XSSFWorkbook wb = new XSSFWorkbook();
+        XSSFSheet sheet = wb.createSheet("Mis Planes");
+        String[] headers = {"Monto invertido", "Tasa %", "Plazo", "Vencimiento", "Ganancia est.", "Estado"};
+        agregarEncabezado(sheet, wb, "Mis Planes de Inversion", headers.length);
+
+        Row rowHeader = sheet.createRow(2);
+        rowHeader.setHeight((short) 500);
+        XSSFCellStyle estiloH = crearEstiloHeader(wb);
+        for (int i = 0; i < headers.length; i++) {
+            Cell c = rowHeader.createCell(i);
+            c.setCellValue(headers[i]);
+            c.setCellStyle(estiloH);
+        }
+
+        List<com.cooperativabeb.model.PlanInversion> lista =
+                new com.cooperativabeb.dao.PlanInversionDAO().listarPorCliente(idCliente);
+        XSSFCellStyle par = crearEstiloFilaPar(wb);
+        XSSFCellStyle impar = crearEstiloFilaImpar(wb);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+
+        for (int i = 0; i < lista.size(); i++) {
+            com.cooperativabeb.model.PlanInversion p = lista.get(i);
+            Row row = sheet.createRow(i + 3);
+            XSSFCellStyle estilo = (i % 2 == 0) ? par : impar;
+            crearCelda(row, 0, String.format("S/. %.2f", p.getMontoInvertido()), estilo);
+            crearCelda(row, 1, p.getTasaPactada() + "%", estilo);
+            crearCelda(row, 2, p.getPlazoMeses() + " meses", estilo);
+            crearCelda(row, 3, p.getFechaVencimiento() != null ?
+                    sdf.format(p.getFechaVencimiento()) : "—", estilo);
+            crearCelda(row, 4, String.format("S/. %.2f", p.calcularGanancia()), estilo);
+            crearCelda(row, 5, p.getEstado(), estilo);
+        }
+
+        for (int i = 0; i < headers.length; i++) sheet.autoSizeColumn(i);
+        try (FileOutputStream fos = new FileOutputStream(archivo)) { wb.write(fos); }
+        wb.close();
+        return archivo;
+    }
 }
