@@ -75,12 +75,25 @@ public class MainFrame extends JFrame {
         tabs.addTab("Reportes PDF", new ReportesPanel());
         tabs.addTab("Clientes", crearPanelClientes());
         tabs.addTab("Cuentas de ahorro", crearPanelCuentas());
-        tabs.addTab("Planes de inversion", new PlanInversionPanel());
+
+        PlanInversionPanel planPanel = new PlanInversionPanel();
+        tabs.addTab("Planes de inversion", planPanel);
+        tabs.addChangeListener(e -> {
+            if (tabs.getSelectedComponent() instanceof PlanInversionPanel p) {
+                p.refrescar();
+            }
+        });
+
+
+
+
         tabs.addTab("Transacciones recientes", crearPanelTransacciones());
 
         add(panelTop, BorderLayout.NORTH);
         add(tabs, BorderLayout.CENTER);
     }
+
+
 
     private JPanel crearPanelClientes() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
