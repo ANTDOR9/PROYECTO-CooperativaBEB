@@ -1,267 +1,398 @@
 package com.cooperativabeb.view;
 
-import com.cooperativabeb.dao.ClienteDAO;
-import com.cooperativabeb.dao.PlanInversionDAO;
-import com.cooperativabeb.dao.ProductoFinancieroDAO;
-import com.cooperativabeb.model.Cliente;
-import com.cooperativabeb.model.PlanInversion;
-import com.cooperativabeb.model.ProductoFinanciero;
+import com.cooperativabeb.dao.CuentaAhorroDAO;
+import com.cooperativabeb.dao.TransaccionDAO;
+import com.cooperativabeb.model.CuentaAhorro;
+import com.cooperativabeb.model.Transaccion;
+import com.cooperativabeb.report.ReporteExcel;
+import com.cooperativabeb.report.ReportePDF;
+import com.cooperativabeb.util.Tema;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.File;
+import java.net.URL;
 import java.util.List;
 
-public class PlanInversionPanel extends JPanel {
+public class ClienteFrame extends JFrame {
 
-    private PlanInversionDAO planDAO = new PlanInversionDAO();
-    private ProductoFinancieroDAO productoDAO = new ProductoFinancieroDAO();
-    private ClienteDAO clienteDAO = new ClienteDAO();
+    private CuentaAhorroDAO cuentaDAO = new CuentaAhorroDAO();
+    private TransaccionDAO transaccionDAO = new TransaccionDAO();
+    private int idCliente;
+    private String nombreCliente;
+    private JTable tablaCuentas;
+    private JTable tablaTransacciones;
+    private JLabel lblSaldoTotal;
+    private FondoAnimado fondo;
 
-    private JTable tablaPlanes;
-    private JComboBox<Cliente> cmbCliente;
-    private JComboBox<ProductoFinanciero> cmbProducto;
-    private JTextField txtMonto;
-    private JLabel lblTasa, lblPlazo, lblGanancia, lblMontoFinal;
-
-    public PlanInversionPanel() {
+    public ClienteFrame(int idCliente, String nombreCliente) {
+        this.idCliente = idCliente;
+        this.nombreCliente = nombreCliente;
         initComponents();
         cargarDatos();
     }
 
-    // Método público para recargar desde MainFrame
-    public void refrescar() {
-        cargarDatos();
+    private void initComponents() {
+        setTitle("Cooperativa BEB — Portal del Cliente");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setMinimumSize(new Dimension(900, 600));
+
+        try {
+            URL imgUrl = getClass().getClassLoader().getResource("logo.png");
+            if (imgUrl != null) setIconImage(new ImageIcon(imgUrl).getImage());
+        } catch (Exception ignored) {}
+
+        fondo = new FondoAnimado();
+        fondo.setLayout(new BorderLayout());
+        setContentPane(fondo);
+
+        JPanel panelTop = new JPanel(new BorderLayout());
+        panelTop.setBackground(new Color(8, 8, 8, 230));
+        panelTop.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 2, 0, Tema.DORADO_OSCURO),
+            new EmptyBorder(12, 24, 12, 24)));
+
+        JPanel panelIzq = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        panelIzq.setOpaque(false);
+        try {
+            URL imgUrl = getClass().getClassLoader().getResource("logo.png");
+            if (imgUrl != null) {
+                Image img = new ImageIcon(imgUrl).getImage()
+                    .getScaledInstance(40, 40, Image.SCALE_SMOOTH);
+                panelIzq.add(new JLabel(new ImageIcon(img)));
+            }
+        } catch (Exception ignored) {}
+
+        JPanel panelNombreBanco = new JPanel(new GridLayout(2, 1, 0, 2));
+        panelNombreBanco.setOpaque(false);
+        JLabel lblBanco = new JLabel("COOPERATIVA BEB");
+        lblBanco.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblBanco.setForeground(Tema.DORADO_PRINCIPAL);
+        JLabel lblPortal = new JLabel("Portal del Cliente");
+        lblPortal.setFont(Tema.FUENTE_PEQUEÑA);
+        lblPortal.setForeground(Tema.TEXTO_SECUNDARIO);
+        panelNombreBanco.add(lblBanco);
+        panelNombreBanco.add(lblPortal);
+        panelIzq.add(panelNombreBanco);
+
+        JPanel panelCentro = new JPanel(new GridLayout(2, 1, 0, 4));
+        panelCentro.setOpaque(false);
+        JLabel lblBienvenida = new JLabel("Bienvenido, " + nombreCliente, SwingConstants.CENTER);
+        lblBienvenida.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblBienvenida.setForeground(Tema.DORADO_PRINCIPAL);
+        lblSaldoTotal = new JLabel("Calculando saldo...", SwingConstants.CENTER);
+        lblSaldoTotal.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblSaldoTotal.setForeground(Tema.VERDE_EXITO);
+        panelCentro.add(lblBienvenida);
+        panelCentro.add(lblSaldoTotal);
+
+        JButton btnCerrar = new JButton("  Cerrar sesion  ");
+        btnCerrar.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnCerrar.setBackground(Tema.NEGRO_CARD);
+        btnCerrar.setForeground(Tema.DORADO_PRINCIPAL);
+        btnCerrar.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Tema.DORADO_OSCURO, 1),
+            new EmptyBorder(8, 18, 8, 18)));
+        btnCerrar.setFocusPainted(false);
+        btnCerrar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnCerrar.addActionListener(e -> {
+            fondo.detener();
+            dispose();
+            new LoginFrame().setVisible(true);
+        });
+
+        panelTop.add(panelIzq, BorderLayout.WEST);
+        panelTop.add(panelCentro, BorderLayout.CENTER);
+        panelTop.add(btnCerrar, BorderLayout.EAST);
+
+        JPanel panelContenido = new JPanel(new BorderLayout());
+        panelContenido.setBackground(new Color(10, 10, 10, 180));
+
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        tabs.setBackground(new Color(15, 15, 15));
+        tabs.setForeground(Tema.DORADO_PRINCIPAL);
+        tabs.addTab("  Mis cuentas  ", crearPanelCuentas());
+        tabs.addTab("  Mis transacciones  ", crearPanelTransacciones());
+        tabs.addTab("  Mis inversiones  ", crearPanelInversiones());
+        panelContenido.add(tabs, BorderLayout.CENTER);
+
+        JPanel panelEstado = new JPanel(new BorderLayout());
+        panelEstado.setBackground(new Color(5, 5, 5, 220));
+        panelEstado.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(1, 0, 0, 0, Tema.NEGRO_BORDE),
+            new EmptyBorder(5, 20, 5, 20)));
+        JLabel lblEstado = new JLabel("Portal Cliente — Solo lectura");
+        lblEstado.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        lblEstado.setForeground(Tema.TEXTO_SUTIL);
+        JLabel lblVer = new JLabel("Cooperativa BEB v1.0 — SENATI 2025");
+        lblVer.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        lblVer.setForeground(Tema.TEXTO_SUTIL);
+        panelEstado.add(lblEstado, BorderLayout.WEST);
+        panelEstado.add(lblVer, BorderLayout.EAST);
+
+        fondo.add(panelTop, BorderLayout.NORTH);
+        fondo.add(panelContenido, BorderLayout.CENTER);
+        fondo.add(panelEstado, BorderLayout.SOUTH);
     }
 
-    private void initComponents() {
-        setLayout(new BorderLayout(10, 10));
-        setBorder(new EmptyBorder(15, 15, 15, 15));
+    private JPanel crearPanelCuentas() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setOpaque(false);
+        panel.setBorder(new EmptyBorder(16, 20, 12, 20));
 
-        String[] cols = {"ID", "Cliente ID", "Producto", "Monto invertido",
-                "Tasa %", "Plazo", "Vencimiento", "Ganancia est.", "Estado"};
-        tablaPlanes = new JTable(new DefaultTableModel(cols, 0) {
+        JPanel panelNorth = new JPanel(new BorderLayout());
+        panelNorth.setOpaque(false);
+        panelNorth.setBorder(new EmptyBorder(0, 0, 10, 0));
+        JLabel lblTitulo = crearTitulo("Mis cuentas de ahorro");
+        JPanel panelBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        panelBtns.setOpaque(false);
+        JButton btnPDF   = crearBtnReporte("Descargar PDF",   new Color(180, 40, 40));
+        JButton btnExcel = crearBtnReporte("Descargar Excel", new Color(34, 139, 34));
+        panelBtns.add(btnPDF);
+        panelBtns.add(btnExcel);
+        panelNorth.add(lblTitulo, BorderLayout.WEST);
+        panelNorth.add(panelBtns, BorderLayout.EAST);
+
+        String[] cols = {"Nro. Cuenta", "Saldo (S/.)", "Tipo", "Estado", "Fecha apertura"};
+        tablaCuentas = new JTable(new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         });
-        tablaPlanes.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        tablaPlanes.setRowHeight(28);
-        tablaPlanes.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
-        tablaPlanes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        Tema.aplicarTabla(tablaCuentas);
+        tablaCuentas.setBackground(new Color(20, 20, 20));
+        JScrollPane scroll = new JScrollPane(tablaCuentas);
+        scroll.setOpaque(false);
+        scroll.getViewport().setBackground(new Color(20, 20, 20));
+        scroll.setBorder(BorderFactory.createLineBorder(Tema.NEGRO_BORDE, 1));
 
-        JPanel panelNuevo = new JPanel(new GridBagLayout());
-        panelNuevo.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(100, 149, 237), 1),
-                "Contratar nuevo plan de inversion",
-                TitledBorder.LEFT, TitledBorder.TOP,
-                new Font("Segoe UI", Font.BOLD, 12),
-                new Color(100, 149, 237)));
+        JPanel panelCards = new JPanel(new GridLayout(1, 3, 16, 0));
+        panelCards.setOpaque(false);
+        panelCards.setBorder(new EmptyBorder(12, 0, 0, 0));
+        panelCards.add(crearCard("Total cuentas", "—", Tema.DORADO_PRINCIPAL));
+        panelCards.add(crearCard("Saldo total", "—", Tema.VERDE_EXITO));
+        panelCards.add(crearCard("Cuentas activas", "—", Tema.TEXTO_SECUNDARIO));
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 8, 5, 8);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(panelNorth, BorderLayout.NORTH);
+        panel.add(scroll, BorderLayout.CENTER);
+        panel.add(panelCards, BorderLayout.SOUTH);
 
-        cmbCliente  = new JComboBox<>();
-        cmbProducto = new JComboBox<>();
-        txtMonto    = new JTextField(15);
-        txtMonto.setPreferredSize(new Dimension(0, 32));
-        txtMonto.putClientProperty("JTextField.placeholderText", "Monto a invertir");
-
-        lblTasa       = new JLabel("Tasa: —");
-        lblPlazo      = new JLabel("Plazo: —");
-        lblGanancia   = new JLabel("Ganancia estimada: —");
-        lblMontoFinal = new JLabel("Monto final: —");
-
-        lblGanancia.setForeground(new Color(80, 200, 120));
-        lblMontoFinal.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        lblMontoFinal.setForeground(new Color(100, 149, 237));
-
-        Font fLbl = new Font("Segoe UI", Font.PLAIN, 13);
-
-        Object[][] filas = {
-                {"Cliente:", cmbCliente},
-                {"Producto:", cmbProducto},
-                {"Monto (S/.):", txtMonto},
-        };
-
-        for (int i = 0; i < filas.length; i++) {
-            gbc.gridx=0; gbc.gridy=i; gbc.weightx=0.3;
-            JLabel l = new JLabel(filas[i][0].toString());
-            l.setFont(fLbl);
-            panelNuevo.add(l, gbc);
-            gbc.gridx=1; gbc.weightx=0.7;
-            panelNuevo.add((Component) filas[i][1], gbc);
-        }
-
-        JPanel panelInfo = new JPanel(new GridLayout(2, 2, 10, 4));
-        panelInfo.setBorder(new EmptyBorder(5, 0, 5, 0));
-        panelInfo.add(lblTasa);
-        panelInfo.add(lblPlazo);
-        panelInfo.add(lblGanancia);
-        panelInfo.add(lblMontoFinal);
-
-        gbc.gridx=0; gbc.gridy=3; gbc.gridwidth=2;
-        panelNuevo.add(panelInfo, gbc);
-
-        JButton btnSimular   = new JButton("Simular");
-        JButton btnContratar = new JButton("Contratar plan");
-        btnContratar.setBackground(new Color(100, 149, 237));
-        btnContratar.setForeground(Color.WHITE);
-        btnContratar.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btnContratar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnSimular.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        JPanel panelBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
-        panelBtns.add(btnSimular);
-        panelBtns.add(btnContratar);
-
-        gbc.gridx=0; gbc.gridy=4; gbc.gridwidth=2;
-        panelNuevo.add(panelBtns, gbc);
-
-        JPanel panelTabla = new JPanel(new BorderLayout(5, 5));
-        panelTabla.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(100, 149, 237), 1),
-                "Planes de inversion activos",
-                TitledBorder.LEFT, TitledBorder.TOP,
-                new Font("Segoe UI", Font.BOLD, 12),
-                new Color(100, 149, 237)));
-
-        JPanel panelTabBtns = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        JButton btnRefrescar = new JButton("Refrescar");
-        JButton btnCancelar  = new JButton("Cancelar plan");
-        btnCancelar.setForeground(Color.RED);
-        btnCancelar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnRefrescar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        panelTabBtns.add(btnRefrescar);
-        panelTabBtns.add(btnCancelar);
-
-        panelTabla.add(new JScrollPane(tablaPlanes), BorderLayout.CENTER);
-        panelTabla.add(panelTabBtns, BorderLayout.SOUTH);
-
-        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, panelNuevo, panelTabla);
-        split.setDividerLocation(240);
-        split.setResizeWeight(0.4);
-
-        add(split, BorderLayout.CENTER);
-
-        // Acciones
-        cmbProducto.addActionListener(e -> actualizarInfoProducto());
-        txtMonto.addActionListener(e -> simular());
-        btnSimular.addActionListener(e -> simular());
-        btnRefrescar.addActionListener(e -> cargarDatos());
-
-        btnContratar.addActionListener(e -> {
-            if (cmbCliente.getSelectedItem() == null ||
-                    cmbProducto.getSelectedItem() == null ||
-                    txtMonto.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Complete todos los campos");
-                return;
-            }
-            double monto;
-            try {
-                monto = Double.parseDouble(txtMonto.getText().trim());
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Monto invalido");
-                return;
-            }
-            Cliente cliente = (Cliente) cmbCliente.getSelectedItem();
-            ProductoFinanciero prod = (ProductoFinanciero) cmbProducto.getSelectedItem();
-
-            if (monto < prod.getMontoMinimo()) {
-                JOptionPane.showMessageDialog(this,
-                        "Monto minimo para este producto: S/. " + prod.getMontoMinimo());
-                return;
-            }
-
-            int confirm = JOptionPane.showConfirmDialog(this,
-                    String.format("Contratar %s por S/. %.2f para %s?",
-                            prod.getNombre(), monto, cliente.getNombreCompleto()),
-                    "Confirmar", JOptionPane.YES_NO_OPTION);
-
-            if (confirm == JOptionPane.YES_OPTION) {
-                if (planDAO.contratar(cliente.getIdCliente(),
-                        prod.getIdProducto(), 1, monto)) {
-                    JOptionPane.showMessageDialog(this, "Plan contratado exitosamente");
-                    txtMonto.setText("");
-                    cargarTablaPlanes();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Error al contratar el plan");
-                }
-            }
-        });
-
-        btnCancelar.addActionListener(e -> {
-            int fila = tablaPlanes.getSelectedRow();
-            if (fila < 0) {
-                JOptionPane.showMessageDialog(this, "Seleccione un plan");
-                return;
-            }
-            int idPlan = (int) tablaPlanes.getValueAt(fila, 0);
-            int ok = JOptionPane.showConfirmDialog(this,
-                    "Cancelar el plan ID " + idPlan + "?",
-                    "Confirmar cancelacion", JOptionPane.YES_NO_OPTION,
-                    JOptionPane.WARNING_MESSAGE);
-            if (ok == JOptionPane.YES_OPTION) {
-                if (planDAO.cancelar(idPlan)) {
-                    JOptionPane.showMessageDialog(this, "Plan cancelado");
-                    cargarTablaPlanes();
-                }
-            }
-        });
+        btnPDF.addActionListener(e -> generarReporte("PDF", "CUENTAS"));
+        btnExcel.addActionListener(e -> generarReporte("EXCEL", "CUENTAS"));
+        return panel;
     }
 
-    private void actualizarInfoProducto() {
-        ProductoFinanciero p = (ProductoFinanciero) cmbProducto.getSelectedItem();
-        if (p != null) {
-            lblTasa.setText(String.format("Tasa: %.2f%%", p.getTasaBase()));
-            lblPlazo.setText("Plazo: " + p.getPlazoMeses() + " meses");
-            simular();
-        }
+    private JPanel crearPanelTransacciones() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setOpaque(false);
+        panel.setBorder(new EmptyBorder(16, 20, 16, 20));
+
+        JPanel panelNorth = new JPanel(new BorderLayout());
+        panelNorth.setOpaque(false);
+        panelNorth.setBorder(new EmptyBorder(0, 0, 10, 0));
+        JLabel lblTitulo = crearTitulo("Mis transacciones recientes");
+        JPanel panelBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        panelBtns.setOpaque(false);
+        JButton btnPDF   = crearBtnReporte("Descargar PDF",   new Color(180, 40, 40));
+        JButton btnExcel = crearBtnReporte("Descargar Excel", new Color(34, 139, 34));
+        panelBtns.add(btnPDF);
+        panelBtns.add(btnExcel);
+        panelNorth.add(lblTitulo, BorderLayout.WEST);
+        panelNorth.add(panelBtns, BorderLayout.EAST);
+
+        String[] cols = {"Tipo", "Monto (S/.)", "Saldo anterior", "Saldo posterior", "Fecha", "Estado"};
+        tablaTransacciones = new JTable(new DefaultTableModel(cols, 0) {
+            public boolean isCellEditable(int r, int c) { return false; }
+        });
+        Tema.aplicarTabla(tablaTransacciones);
+        tablaTransacciones.setBackground(new Color(20, 20, 20));
+        JScrollPane scroll = new JScrollPane(tablaTransacciones);
+        scroll.setOpaque(false);
+        scroll.getViewport().setBackground(new Color(20, 20, 20));
+        scroll.setBorder(BorderFactory.createLineBorder(Tema.NEGRO_BORDE, 1));
+
+        panel.add(panelNorth, BorderLayout.NORTH);
+        panel.add(scroll, BorderLayout.CENTER);
+
+        btnPDF.addActionListener(e -> generarReporte("PDF", "TRANSACCIONES"));
+        btnExcel.addActionListener(e -> generarReporte("EXCEL", "TRANSACCIONES"));
+        return panel;
     }
 
-    private void simular() {
-        ProductoFinanciero p = (ProductoFinanciero) cmbProducto.getSelectedItem();
-        if (p == null || txtMonto.getText().trim().isEmpty()) return;
+    private JPanel crearPanelInversiones() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setOpaque(false);
+        panel.setBorder(new EmptyBorder(16, 20, 16, 20));
+
+        JPanel panelNorth = new JPanel(new BorderLayout());
+        panelNorth.setOpaque(false);
+        panelNorth.setBorder(new EmptyBorder(0, 0, 10, 0));
+        JLabel lblTitulo = crearTitulo("Mis planes de inversion");
+        JPanel panelBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        panelBtns.setOpaque(false);
+        JButton btnPDF   = crearBtnReporte("Descargar PDF",   new Color(180, 40, 40));
+        JButton btnExcel = crearBtnReporte("Descargar Excel", new Color(34, 139, 34));
+        panelBtns.add(btnPDF);
+        panelBtns.add(btnExcel);
+        panelNorth.add(lblTitulo, BorderLayout.WEST);
+        panelNorth.add(panelBtns, BorderLayout.EAST);
+
+        String[] cols = {"ID", "Monto invertido", "Tasa %", "Plazo", "Vencimiento", "Ganancia est.", "Estado"};
+        JTable tablaPlanes = new JTable(new DefaultTableModel(cols, 0) {
+            public boolean isCellEditable(int r, int c) { return false; }
+        });
+        Tema.aplicarTabla(tablaPlanes);
+        tablaPlanes.setBackground(new Color(20, 20, 20));
+        JScrollPane scroll = new JScrollPane(tablaPlanes);
+        scroll.setOpaque(false);
+        scroll.getViewport().setBackground(new Color(20, 20, 20));
+        scroll.setBorder(BorderFactory.createLineBorder(Tema.NEGRO_BORDE, 1));
+
         try {
-            double monto = Double.parseDouble(txtMonto.getText().trim());
-            double ganancia = p.calcularGanancia(monto);
-            double total = monto + ganancia;
-            lblGanancia.setText(String.format("Ganancia: S/. %.2f", ganancia));
-            lblMontoFinal.setText(String.format("Monto final: S/. %.2f", total));
-        } catch (NumberFormatException ignored) {}
-    }
-
-    private void cargarDatos() {
-        // Recargar clientes frescos desde BD
-        cmbCliente.removeAllItems();
-        for (Cliente c : clienteDAO.listarTodos())
-            if (c.getEstado().equals("ACTIVO"))
-                cmbCliente.addItem(c);
-
-        // Recargar productos
-        cmbProducto.removeAllItems();
-        for (ProductoFinanciero p : productoDAO.listarPorTipo("INVERSION"))
-            cmbProducto.addItem(p);
-
-        cargarTablaPlanes();
-        actualizarInfoProducto();
-    }
-
-    private void cargarTablaPlanes() {
-        DefaultTableModel model = (DefaultTableModel) tablaPlanes.getModel();
-        model.setRowCount(0);
-        for (PlanInversion p : planDAO.listarTodos()) {
-            model.addRow(new Object[]{
+            com.cooperativabeb.dao.PlanInversionDAO planDAO =
+                new com.cooperativabeb.dao.PlanInversionDAO();
+            DefaultTableModel model = (DefaultTableModel) tablaPlanes.getModel();
+            for (com.cooperativabeb.model.PlanInversion p :
+                    planDAO.listarPorCliente(idCliente)) {
+                model.addRow(new Object[]{
                     p.getIdPlan(),
-                    p.getIdCliente(),
-                    p.getIdProducto() + " - CDT",
                     String.format("S/. %.2f", p.getMontoInvertido()),
                     p.getTasaPactada() + "%",
                     p.getPlazoMeses() + " meses",
                     p.getFechaVencimiento(),
                     String.format("S/. %.2f", p.calcularGanancia()),
                     p.getEstado()
+                });
+            }
+        } catch (Exception e) {
+            System.err.println("Error cargando planes: " + e.getMessage());
+        }
+
+        panel.add(panelNorth, BorderLayout.NORTH);
+        panel.add(scroll, BorderLayout.CENTER);
+
+        btnPDF.addActionListener(e -> generarReporte("PDF", "PLANES"));
+        btnExcel.addActionListener(e -> generarReporte("EXCEL", "PLANES"));
+        return panel;
+    }
+
+    private void generarReporte(String formato, String tipo) {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setDialogTitle("Selecciona carpeta destino");
+        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+        String ruta = chooser.getSelectedFile().getAbsolutePath();
+        SwingWorker<String, Void> worker = new SwingWorker<>() {
+            @Override
+            protected String doInBackground() throws Exception {
+                if (formato.equals("PDF")) {
+                    return switch (tipo) {
+                        case "CUENTAS"       -> ReportePDF.generarReporteCuentas(ruta);
+                        case "TRANSACCIONES" -> ReportePDF.generarReporteTransacciones(ruta);
+                        case "PLANES"        -> ReportePDF.generarReportePlanes(ruta);
+                        default -> throw new Exception("Tipo desconocido");
+                    };
+                } else {
+                    return switch (tipo) {
+                        case "CUENTAS"       -> ReporteExcel.generarReporteCuentas(ruta);
+                        case "TRANSACCIONES" -> ReporteExcel.generarReporteTransacciones(ruta);
+                        case "PLANES"        -> ReporteExcel.generarReportePlanes(ruta);
+                        default -> throw new Exception("Tipo desconocido");
+                    };
+                }
+            }
+            @Override
+            protected void done() {
+                try {
+                    String archivo = get();
+                    int abrir = JOptionPane.showConfirmDialog(ClienteFrame.this,
+                        "Reporte generado: " + new File(archivo).getName() +
+                        "\n\n¿Abrir la carpeta?", "Descarga completa",
+                        JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                    if (abrir == JOptionPane.YES_OPTION)
+                        Desktop.getDesktop().open(new File(ruta));
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(ClienteFrame.this,
+                        "Error: " + e.getMessage(), "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private JLabel crearTitulo(String texto) {
+        JLabel lbl = new JLabel(texto);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lbl.setForeground(Tema.DORADO_PRINCIPAL);
+        lbl.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 3, 0, 0, Tema.DORADO_PRINCIPAL),
+            new EmptyBorder(0, 10, 0, 0)));
+        return lbl;
+    }
+
+    private JButton crearBtnReporte(String texto, Color color) {
+        JButton btn = new JButton(texto);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btn.setBackground(color);
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.setBorder(new EmptyBorder(7, 14, 7, 14));
+        return btn;
+    }
+
+    private JPanel crearCard(String titulo, String valor, Color color) {
+        JPanel card = new JPanel(new BorderLayout(4, 6));
+        card.setBackground(new Color(15, 15, 15, 200));
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 3, 0, 0, color),
+            new EmptyBorder(12, 16, 12, 16)));
+        JLabel lblT = new JLabel(titulo);
+        lblT.setFont(Tema.FUENTE_PEQUEÑA);
+        lblT.setForeground(Tema.TEXTO_SECUNDARIO);
+        JLabel lblV = new JLabel(valor);
+        lblV.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblV.setForeground(color);
+        card.add(lblT, BorderLayout.NORTH);
+        card.add(lblV, BorderLayout.CENTER);
+        return card;
+    }
+
+    private void cargarDatos() {
+        List<CuentaAhorro> cuentas = cuentaDAO.listarPorCliente(idCliente);
+        DefaultTableModel modelCuentas = (DefaultTableModel) tablaCuentas.getModel();
+        modelCuentas.setRowCount(0);
+        double saldoTotal = 0;
+        int activas = 0;
+        for (CuentaAhorro c : cuentas) {
+            modelCuentas.addRow(new Object[]{
+                c.getNroCuenta(),
+                String.format("S/. %.2f", c.getSaldo()),
+                c.getTipoCuenta(),
+                c.getEstado(),
+                c.getFechaApertura()
             });
+            saldoTotal += c.getSaldo();
+            if (c.getEstado().equals("ACTIVA")) activas++;
+        }
+        lblSaldoTotal.setText(String.format("Saldo total disponible: S/. %.2f", saldoTotal));
+
+        DefaultTableModel modelTrans = (DefaultTableModel) tablaTransacciones.getModel();
+        modelTrans.setRowCount(0);
+        for (CuentaAhorro c : cuentas) {
+            for (Transaccion t : transaccionDAO.listarPorCuenta(c.getIdCuenta())) {
+                modelTrans.addRow(new Object[]{
+                    t.getTipo(),
+                    String.format("S/. %.2f", t.getMonto()),
+                    String.format("S/. %.2f", t.getSaldoAnterior()),
+                    String.format("S/. %.2f", t.getSaldoPosterior()),
+                    t.getFechaTransaccion(),
+                    t.getEstado()
+                });
+            }
         }
     }
 }
